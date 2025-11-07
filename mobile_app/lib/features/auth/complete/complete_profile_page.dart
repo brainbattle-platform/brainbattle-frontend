@@ -1,36 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../auth/signup/signup_controller.dart';
-import '../../auth/verify/verify_otp_page.dart';
+import '../../auth/complete/complete_profile_controller.dart';
 
+class CompleteProfilePage extends StatefulWidget {
+  const CompleteProfilePage({
+    super.key,
+    required this.email,
+  });
 
-class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
-  static const routeName = '/auth/signup';
+  static const routeName = '/auth/complete-profile';
+  final String email; // truyền từ bước verify OTP
 
   @override
-  State<SignUpPage> createState() => _SignUpPageState();
+  State<CompleteProfilePage> createState() => _CompleteProfilePageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class _CompleteProfilePageState extends State<CompleteProfilePage> {
   final _formKey = GlobalKey<FormState>();
-  final _email = TextEditingController();
-  late final SignUpController _vm;
+  final _displayName = TextEditingController();
+  final _password = TextEditingController();
+  final _confirm = TextEditingController();
+  late final CompleteProfileController _vm;
 
-  // Brand colors
   static const _pinkBrain = Color(0xFFFF8FAB);
   static const _pinkBattle = Color(0xFFF3B4C3);
 
   @override
   void initState() {
     super.initState();
-    _vm = SignUpController(); // stub bên trong
+    _vm = CompleteProfileController();
   }
 
   @override
   void dispose() {
-    _email.dispose();
+    _displayName.dispose();
+    _password.dispose();
+    _confirm.dispose();
     _vm.dispose();
     super.dispose();
   }
@@ -39,34 +45,69 @@ class _SignUpPageState extends State<SignUpPage> {
     HapticFeedback.selectionClick();
     if (!_formKey.currentState!.validate()) return;
 
-    // ⬇️ Gọi hàm verify email/OTP trong controller
-    //final ok = await _vm.requestOtp(_email.text.trim());
+    final ok = await _vm.setCredentials(
+      email: widget.email,
+      displayName: _displayName.text.trim(),
+      password: _password.text,
+    );
     if (!mounted) return;
 
-    if (true) {
+    if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Verification email/code sent!')),
+        const SnackBar(content: Text('Account created! (stub)')),
       );
-      // TODO: điều hướng sang trang nhập OTP / verify
-      Navigator.pushNamed(context, '/auth/verify/verify_otp_page.dart');
+      // TODO: Điều hướng vào app/home
+      Navigator.popUntil(context, (r) => r.isFirst);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_vm.errorMessage ?? 'Failed to send code')),
+        SnackBar(content: Text(_vm.errorMessage ?? 'Unable to complete profile')),
       );
     }
   }
 
-  String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Please enter your email';
-    final ok = RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
-        .hasMatch(v.trim());
-    if (!ok) return 'Invalid email';
+  String? _validateName(String? v) {
+    if (v == null || v.trim().isEmpty) return 'Please enter your display name';
+    if (v.trim().length < 2) return 'Name is too short';
     return null;
+  }
+
+  String? _validatePassword(String? v) {
+    if (v == null || v.isEmpty) return 'Please enter your password';
+    if (v.length < 6) return 'At least 6 characters';
+    return null;
+  }
+
+  String? _validateConfirm(String? v) {
+    if (v == null || v.isEmpty) return 'Please confirm your password';
+    if (v != _password.text) return 'Passwords do not match';
+    return null;
+  }
+
+  // hint strength đơn giản
+  String _passwordHint(String v) {
+    if (v.isEmpty) return '';
+    int score = 0;
+    if (v.length >= 8) score++;
+    if (RegExp(r'[A-Z]').hasMatch(v)) score++;
+    if (RegExp(r'[0-9]').hasMatch(v)) score++;
+    if (RegExp(r'[!@#\$%^&*(),.?":{}|<>_\-]').hasMatch(v)) score++;
+
+    if (score >= 4) return 'Strong password';
+    if (score >= 2) return 'Good password';
+    return 'Weak password';
+  }
+
+  Color _passwordHintColor(String v) {
+    final h = _passwordHint(v);
+    if (h == 'Strong password') return const Color(0xFF79E0A8);
+    if (h == 'Good password') return const Color(0xFFF6D365);
+    if (h == 'Weak password') return const Color(0xFFF39C9C);
+    return Colors.transparent;
   }
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
+    final t = Theme.of(context).textTheme;
     final media = MediaQuery.of(context);
     final vGap = media.size.height < 700 ? 12.0 : 16.0;
 
@@ -85,10 +126,10 @@ class _SignUpPageState extends State<SignUpPage> {
         title: Row(
           children: const [
             SizedBox(width: 4),
-            Icon(Icons.mark_email_unread_rounded, color: _pinkBrain, size: 20),
+            Icon(Icons.badge_rounded, color: _pinkBrain, size: 20),
             SizedBox(width: 8),
             Text(
-              'Verify email',
+              'Set your profile',
               style: TextStyle(
                 fontFamily: 'PlusJakartaSans',
                 fontWeight: FontWeight.w800,
@@ -111,6 +152,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 children: [
                   SizedBox(height: vGap),
 
+                  // Header logo + sub
                   const Hero(
                     tag: 'bb_logo',
                     child: Image(
@@ -121,9 +163,9 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Verify your email',
+                    'Create your profile',
                     textAlign: TextAlign.center,
-                    style: text.titleLarge?.copyWith(
+                    style: t.titleLarge?.copyWith(
                       fontWeight: FontWeight.w800,
                       fontSize: 22,
                       color: _pinkBattle,
@@ -131,9 +173,9 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'We will send a verification link/code to your inbox.',
+                    'Set your display name and password for\n${_maskEmail(widget.email)}',
                     textAlign: TextAlign.center,
-                    style: text.bodyMedium?.copyWith(
+                    style: t.bodyMedium?.copyWith(
                       color: Colors.white70,
                       fontSize: 14,
                     ),
@@ -141,18 +183,77 @@ class _SignUpPageState extends State<SignUpPage> {
 
                   SizedBox(height: vGap + 8),
 
+                  // FORM
                   Form(
                     key: _formKey,
-                    child: _BBTextField(
-                      label: 'Email',
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress,
-                      validator: _validateEmail,
+                    child: Column(
+                      children: [
+                        _BBTextField(
+                          label: 'Display name',
+                          controller: _displayName,
+                          validator: _validateName,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        const SizedBox(height: 14),
+
+                        ValueListenableBuilder<bool>(
+                          valueListenable: _vm.obscurePassword,
+                          builder: (_, obscure, __) {
+                            return _BBTextField(
+                              label: 'Password',
+                              controller: _password,
+                              obscureText: obscure,
+                              validator: _validatePassword,
+                              onChanged: (_) => setState(() {}),
+                              suffixIcon: IconButton(
+                                onPressed: _vm.togglePassword,
+                                icon: Icon(
+                                  obscure
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+
+                        // strength hint
+                        Builder(
+                          builder: (_) {
+                            final hint = _passwordHint(_password.text);
+                            if (hint.isEmpty) return const SizedBox(height: 8);
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  hint,
+                                  style: t.bodySmall?.copyWith(
+                                    color: _passwordHintColor(_password.text),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+
+                        const SizedBox(height: 14),
+                        _BBTextField(
+                          label: 'Confirm password',
+                          controller: _confirm,
+                          obscureText: true,
+                          validator: _validateConfirm,
+                          textInputAction: TextInputAction.done,
+                        ),
+                      ],
                     ),
                   ),
 
                   const SizedBox(height: 18),
 
+                  // lỗi tổng
                   ValueListenableBuilder<String?>(
                     valueListenable: _vm.error,
                     builder: (_, msg, __) {
@@ -161,12 +262,14 @@ class _SignUpPageState extends State<SignUpPage> {
                         padding: const EdgeInsets.only(bottom: 8),
                         child: Text(
                           msg,
-                          style: text.bodySmall?.copyWith(color: Colors.red[300]),
+                          textAlign: TextAlign.center,
+                          style: t.bodySmall?.copyWith(color: Colors.red[300]),
                         ),
                       );
                     },
                   ),
 
+                  // Nút hoàn tất
                   ValueListenableBuilder<bool>(
                     valueListenable: _vm.loading,
                     builder: (_, isLoading, __) {
@@ -200,58 +303,11 @@ class _SignUpPageState extends State<SignUpPage> {
                                     width: 20, height: 20,
                                     child: CircularProgressIndicator(strokeWidth: 2),
                                   )
-                                : const Text('Verify email'),
+                                : const Text('Create account'),
                           ),
                         ),
                       );
                     },
-                  ),
-
-                  const SizedBox(height: 26),
-
-                  Row(
-                    children: [
-                      Expanded(child: Container(height: 1, color: Colors.white10)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(
-                          'or continue with',
-                          style: text.labelMedium?.copyWith(color: Colors.white60),
-                        ),
-                      ),
-                      Expanded(child: Container(height: 1, color: Colors.white10)),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  _SocialButton(
-                    label: 'Continue with Google',
-                    icon: const Icon(Icons.g_mobiledata_rounded,
-                        size: 24, color: Colors.white),
-                    background: Colors.white.withOpacity(0.08),
-                    onPressed: () {
-                      // TODO: OAuth Google
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _SocialButton(
-                    label: 'Continue with Facebook',
-                    icon: const Icon(Icons.facebook_rounded, color: Colors.white),
-                    background: Colors.white.withOpacity(0.08),
-                    onPressed: () {
-                      // TODO: OAuth Facebook
-                    },
-                  ),
-
-                  SizedBox(height: vGap + 10),
-
-                  // ===== Link Login =====
-                  Center(
-                    child: TextButton(
-                      onPressed: () => Navigator.pushReplacementNamed(
-                        context, '/auth/login'),
-                      child: const Text('Already have an account? Login'),
-                    ),
                   ),
                 ],
               ),
@@ -260,6 +316,20 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
       ),
     );
+  }
+
+  String _maskEmail(String email) {
+    final parts = email.split('@');
+    if (parts.length != 2) return email;
+    String mask(String s) {
+      if (s.length <= 1) return s;
+      return s[0] + '*' * (s.length - 1);
+    }
+    final name = mask(parts[0]);
+    final domParts = parts[1].split('.');
+    if (domParts.isEmpty) return '$name@${mask(parts[1])}';
+    domParts[0] = mask(domParts[0]);
+    return '$name@${domParts.join('.')}';
   }
 }
 
@@ -271,6 +341,8 @@ class _BBTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final bool obscureText;
   final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onChanged;
 
   const _BBTextField({
     required this.label,
@@ -279,6 +351,8 @@ class _BBTextField extends StatelessWidget {
     this.suffixIcon,
     this.obscureText = false,
     this.keyboardType,
+    this.textInputAction,
+    this.onChanged,
   });
 
   @override
@@ -288,6 +362,8 @@ class _BBTextField extends StatelessWidget {
       validator: validator,
       obscureText: obscureText,
       keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      onChanged: onChanged,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
@@ -308,41 +384,6 @@ class _BBTextField extends StatelessWidget {
         ),
         suffixIcon: suffixIcon,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      ),
-    );
-  }
-}
-
-/// Social button tái dùng
-class _SocialButton extends StatelessWidget {
-  final String label;
-  final Widget icon;
-  final VoidCallback onPressed;
-  final Color? background;
-
-  const _SocialButton({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-    this.background,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: icon,
-        label: Text(label),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: background ?? Colors.white12,
-          side: const BorderSide(color: Colors.white24, width: 1.2),
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600),
-        ),
       ),
     );
   }

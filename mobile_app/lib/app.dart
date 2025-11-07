@@ -5,6 +5,7 @@ import 'features/auth/splash/splash_page.dart';
 import 'features/auth/starter/starter_page.dart';
 import 'features/auth/login/login_page.dart';
 import 'features/auth/signup/sign_up_page.dart';
+import 'features/auth/verify/verify_otp_page.dart';
 
 import 'features/messaging/ui/conversations_page.dart';
 
