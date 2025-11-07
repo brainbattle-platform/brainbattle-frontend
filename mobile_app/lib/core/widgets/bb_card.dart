@@ -76,10 +76,12 @@ class GradientBoxBorder extends BoxBorder {
   @override
   BorderSide get top    => BorderSide(width: width, color: Colors.transparent);
   @override
+  // ignore: override_on_non_overriding_member
   BorderSide get right  => BorderSide(width: width, color: Colors.transparent);
   @override
   BorderSide get bottom => BorderSide(width: width, color: Colors.transparent);
   @override
+  // ignore: override_on_non_overriding_member
   BorderSide get left   => BorderSide(width: width, color: Colors.transparent);
 
   // ShapeBorder abstract member

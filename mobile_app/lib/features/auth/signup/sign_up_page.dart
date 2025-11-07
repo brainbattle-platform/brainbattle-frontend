@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../auth/signup/signup_controller.dart';
-import '../../auth/verify/verify_otp_page.dart';
-
+import 'signup_controller.dart';
+import '../verify/verify_otp_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -18,14 +17,14 @@ class _SignUpPageState extends State<SignUpPage> {
   final _email = TextEditingController();
   late final SignUpController _vm;
 
-  // Brand colors
+  // ignore: unused_field
   static const _pinkBrain = Color(0xFFFF8FAB);
   static const _pinkBattle = Color(0xFFF3B4C3);
 
   @override
   void initState() {
     super.initState();
-    _vm = SignUpController(); // stub bên trong
+    _vm = SignUpController();
   }
 
   @override
@@ -35,33 +34,35 @@ class _SignUpPageState extends State<SignUpPage> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    HapticFeedback.selectionClick();
-    if (!_formKey.currentState!.validate()) return;
-
-    // ⬇️ Gọi hàm verify email/OTP trong controller
-    //final ok = await _vm.requestOtp(_email.text.trim());
-    if (!mounted) return;
-
-    if (true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Verification email/code sent!')),
-      );
-      // TODO: điều hướng sang trang nhập OTP / verify
-      Navigator.pushNamed(context, '/auth/verify/verify_otp_page.dart');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_vm.errorMessage ?? 'Failed to send code')),
-      );
-    }
-  }
-
   String? _validateEmail(String? v) {
     if (v == null || v.trim().isEmpty) return 'Please enter your email';
     final ok = RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
         .hasMatch(v.trim());
     if (!ok) return 'Invalid email';
     return null;
+  }
+
+  Future<void> _submit() async {
+    HapticFeedback.selectionClick();
+    if (!_formKey.currentState!.validate()) return;
+    final email = _email.text.trim();
+
+    final ok = await _vm.startRegistration(email);
+    if (!mounted) return;
+
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Verification code sent!')),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => VerifyOtpPage(email: email)),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_vm.errorMessage ?? 'Failed to send code')),
+      );
+    }
   }
 
   @override
@@ -82,23 +83,7 @@ class _SignUpPageState extends State<SignUpPage> {
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Row(
-          children: const [
-            SizedBox(width: 4),
-            Icon(Icons.mark_email_unread_rounded, color: _pinkBrain, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'Verify email',
-              style: TextStyle(
-                fontFamily: 'PlusJakartaSans',
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-                letterSpacing: .2,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
+        title: const _HeaderTitle(icon: Icons.mark_email_unread_rounded, text: 'Verify email'),
       ),
       body: SafeArea(
         child: Center(
@@ -110,7 +95,6 @@ class _SignUpPageState extends State<SignUpPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SizedBox(height: vGap),
-
                   const Hero(
                     tag: 'bb_logo',
                     child: Image(
@@ -131,14 +115,10 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'We will send a verification link/code to your inbox.',
+                    'We will send a 6-digit code to your inbox.',
                     textAlign: TextAlign.center,
-                    style: text.bodyMedium?.copyWith(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    style: text.bodyMedium?.copyWith(color: Colors.white70, fontSize: 14),
                   ),
-
                   SizedBox(height: vGap + 8),
 
                   Form(
@@ -150,106 +130,38 @@ class _SignUpPageState extends State<SignUpPage> {
                       validator: _validateEmail,
                     ),
                   ),
-
                   const SizedBox(height: 18),
-
-                  ValueListenableBuilder<String?>(
-                    valueListenable: _vm.error,
-                    builder: (_, msg, __) {
-                      if (msg == null) return const SizedBox.shrink();
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Text(
-                          msg,
-                          style: text.bodySmall?.copyWith(color: Colors.red[300]),
-                        ),
-                      );
-                    },
-                  ),
 
                   ValueListenableBuilder<bool>(
                     valueListenable: _vm.loading,
                     builder: (_, isLoading, __) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          boxShadow: const [
-                            BoxShadow(
-                              blurRadius: 14,
-                              offset: Offset(0, 6),
-                              color: Color(0x44FB6F92),
-                            ),
-                          ],
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: isLoading ? null : _submit,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _pinkBattle,
-                              foregroundColor: Colors.black,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 6,
-                              shadowColor: const Color(0x44FB6F92),
-                            ),
-                            child: isLoading
-                                ? const SizedBox(
-                                    width: 20, height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Text('Verify email'),
+                      return SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: isLoading ? null : _submit,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _pinkBattle,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            elevation: 6,
+                            shadowColor: const Color(0x44FB6F92),
                           ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 20, height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Text('Send code'),
                         ),
                       );
                     },
                   ),
 
                   const SizedBox(height: 26),
-
-                  Row(
-                    children: [
-                      Expanded(child: Container(height: 1, color: Colors.white10)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(
-                          'or continue with',
-                          style: text.labelMedium?.copyWith(color: Colors.white60),
-                        ),
-                      ),
-                      Expanded(child: Container(height: 1, color: Colors.white10)),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  _SocialButton(
-                    label: 'Continue with Google',
-                    icon: const Icon(Icons.g_mobiledata_rounded,
-                        size: 24, color: Colors.white),
-                    background: Colors.white.withOpacity(0.08),
-                    onPressed: () {
-                      // TODO: OAuth Google
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _SocialButton(
-                    label: 'Continue with Facebook',
-                    icon: const Icon(Icons.facebook_rounded, color: Colors.white),
-                    background: Colors.white.withOpacity(0.08),
-                    onPressed: () {
-                      // TODO: OAuth Facebook
-                    },
-                  ),
-
-                  SizedBox(height: vGap + 10),
-
-                  // ===== Link Login =====
                   Center(
                     child: TextButton(
-                      onPressed: () => Navigator.pushReplacementNamed(
-                        context, '/auth/login'),
+                      onPressed: () => Navigator.pushReplacementNamed(context, '/auth/login'),
                       child: const Text('Already have an account? Login'),
                     ),
                   ),
@@ -263,12 +175,37 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 }
 
-/// TextField tái dùng
+class _HeaderTitle extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  const _HeaderTitle({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const SizedBox(width: 4),
+        Icon(icon, color: Color(0xFFFF8FAB), size: 20),
+        const SizedBox(width: 8),
+        const Text(
+          'Verify email',
+          style: TextStyle(
+            fontFamily: 'PlusJakartaSans',
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            letterSpacing: .2,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _BBTextField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final String? Function(String?)? validator;
-  final Widget? suffixIcon;
   final bool obscureText;
   final TextInputType? keyboardType;
 
@@ -276,7 +213,7 @@ class _BBTextField extends StatelessWidget {
     required this.label,
     required this.controller,
     this.validator,
-    this.suffixIcon,
+    // ignore: unused_element_parameter
     this.obscureText = false,
     this.keyboardType,
   });
@@ -306,43 +243,7 @@ class _BBTextField extends StatelessWidget {
           borderSide: BorderSide(color: Colors.redAccent),
           borderRadius: BorderRadius.circular(14),
         ),
-        suffixIcon: suffixIcon,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      ),
-    );
-  }
-}
-
-/// Social button tái dùng
-class _SocialButton extends StatelessWidget {
-  final String label;
-  final Widget icon;
-  final VoidCallback onPressed;
-  final Color? background;
-
-  const _SocialButton({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-    this.background,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: icon,
-        label: Text(label),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.white,
-          backgroundColor: background ?? Colors.white12,
-          side: const BorderSide(color: Colors.white24, width: 1.2),
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600),
-        ),
       ),
     );
   }

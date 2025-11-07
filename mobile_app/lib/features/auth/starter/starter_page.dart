@@ -1,7 +1,5 @@
-// lib/features/auth/starter/starter_page.dart
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../community/community_shell.dart';
 import '../../auth/login/login_page.dart';
 import '../../shortvideo/shortvideo.dart';
 import '../../auth/signup/sign_up_page.dart';
@@ -17,8 +15,6 @@ class StarterPage extends StatefulWidget {
 class _Brand {
   static const pinkBrain = Color(0xFFFF8FAB);
   static const pinkBattle = Color(0xFFF3B4C3);
-
-  static const fontFamily = 'Poppins';
 }
 
 class _PopupPalette {
@@ -71,7 +67,6 @@ class _StarterPageState extends State<StarterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     final size = MediaQuery.of(context).size;
     final w = MediaQuery.of(context).size.width;
     final h = size.height;
@@ -187,8 +182,6 @@ class _Popup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(
