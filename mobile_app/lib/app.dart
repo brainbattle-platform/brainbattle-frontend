@@ -5,6 +5,7 @@ import 'features/auth/starter/starter_page.dart';
 import 'features/messaging/ui/conversations_page.dart';
 import 'features/learning/learning.dart';
 import 'features/learning/ui/galaxy_map_screen.dart';
+import 'features/auth/login/login_page.dart';
 import 'features/community/community_shell.dart';
 import 'features/shortvideo/shortvideo.dart';
 
@@ -25,6 +26,8 @@ class BrainBattleApp extends StatelessWidget {
         CommunityShell.routeName: (_) => const CommunityShell(), // ok
         LessonsScreen.routeName: (_) => const LessonsScreen(),
         ShortVideoShell.routeName: (c) => const ShortVideoShell(),
+        LoginPage.routeName: (_) => const LoginPage(),
+    // SignUpPage.routeName: (_) => const SignUpPage(),
       },
       onUnknownRoute: (_) =>
           MaterialPageRoute(builder: (_) => const StarterPage()),
