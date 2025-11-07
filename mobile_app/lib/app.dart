@@ -19,11 +19,11 @@ class BrainBattleApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: bbLightTheme(),
       darkTheme: bbDarkTheme(),
-      themeMode: ThemeMode.dark, // tránh nháy nền trắng
-      home: const SplashPage(), // build Splash ngay, không qua tra cứu route
+      themeMode: ThemeMode.dark, 
+      home: const SplashPage(), 
       routes: {
         StarterPage.routeName: (_) => const StarterPage(),
-        CommunityShell.routeName: (_) => const CommunityShell(), // ok
+        CommunityShell.routeName: (_) => const CommunityShell(), 
         LessonsScreen.routeName: (_) => const LessonsScreen(),
         ShortVideoShell.routeName: (c) => const ShortVideoShell(),
         LoginPage.routeName: (_) => const LoginPage(),
