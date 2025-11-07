@@ -203,6 +203,7 @@ class _BBTextField extends StatelessWidget {
     required this.controller,
     this.validator,
     this.obscureText = false,
+    // ignore: unused_element_parameter
     this.keyboardType,
     this.suffixIcon,
   });

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../auth/login/login_controller.dart';
+import 'login_controller.dart';
+import '../verify/verify_otp_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,9 +17,6 @@ class _LoginPageState extends State<LoginPage> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   late final LoginController _vm;
-
-  static const _pinkBrain = Color(0xFFFF8FAB);
-  static const _pinkBattle = Color(0xFFF3B4C3);
 
   @override
   void initState() {
@@ -41,16 +39,30 @@ class _LoginPageState extends State<LoginPage> {
     final ok = await _vm.login(_email.text.trim(), _password.text);
     if (!mounted) return;
 
+    final err = _vm.error.value;
+
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Logged in (stub)!')),
+        const SnackBar(content: Text('Logged in!')),
       );
-      Navigator.pop(context);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_vm.errorMessage ?? 'Login failed')),
-      );
+      Navigator.pop(context); // hoặc pushReplacementNamed('/home')
+      return;
     }
+
+    if (err == 'EMAIL_NOT_VERIFIED') {
+      // Điều hướng sang Verify OTP và cho phép resend code
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VerifyOtpPage(email: _email.text.trim()),
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(err ?? 'Login failed')),
+    );
   }
 
   String? _validateEmail(String? v) {
@@ -71,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final media = MediaQuery.of(context);
-    final vGap = media.size.height < 700 ? 12.0 : 16.0; // spacing responsive
+    final vGap = media.size.height < 700 ? 12.0 : 16.0;
 
     return Scaffold(
       backgroundColor: BBColors.darkBg,
@@ -85,22 +97,15 @@ class _LoginPageState extends State<LoginPage> {
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Row(
-          children: const [
-            SizedBox(width: 4),
-            Icon(Icons.lock_outline_rounded, color: _pinkBrain, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'Login',
-              style: TextStyle(
-                fontFamily: 'PlusJakartaSans',
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-                letterSpacing: .2,
-                color: Colors.white,
-              ),
-            ),
-          ],
+        title: const Text(
+          'Login',
+          style: TextStyle(
+            fontFamily: 'PlusJakartaSans',
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            letterSpacing: .2,
+            color: Colors.white,
+          ),
         ),
       ),
       body: SafeArea(
@@ -113,7 +118,6 @@ class _LoginPageState extends State<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SizedBox(height: vGap),
-
                   const Hero(
                     tag: 'bb_logo',
                     child: Image(
@@ -127,21 +131,16 @@ class _LoginPageState extends State<LoginPage> {
                     'Welcome back!',
                     textAlign: TextAlign.center,
                     style: text.titleLarge?.copyWith(
+                      color: Colors.white,
                       fontWeight: FontWeight.w800,
-                      fontSize: 22,
-                      color: _pinkBattle, 
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     'Sign in to continue learning.',
                     textAlign: TextAlign.center,
-                    style: text.bodyMedium?.copyWith(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    style: text.bodyMedium?.copyWith(color: Colors.white70),
                   ),
-
                   SizedBox(height: vGap + 8),
 
                   Form(
@@ -155,7 +154,6 @@ class _LoginPageState extends State<LoginPage> {
                           validator: _validateEmail,
                         ),
                         const SizedBox(height: 14),
-
                         ValueListenableBuilder<bool>(
                           valueListenable: _vm.obscurePassword,
                           builder: (_, obscure, __) {
@@ -176,31 +174,30 @@ class _LoginPageState extends State<LoginPage> {
                             );
                           },
                         ),
-
                         const SizedBox(height: 8),
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: () {
                               HapticFeedback.selectionClick();
-                              // TODO: Forgot password flow
+                              // TODO: Forgot password (tương tự verify email)
                             },
                             child: const Text('Forgot password?'),
                           ),
                         ),
 
-                        // Error tổng từ controller (nếu có)
+                        const SizedBox(height: 6),
                         ValueListenableBuilder<String?>(
                           valueListenable: _vm.error,
                           builder: (_, msg, __) {
-                            if (msg == null) return const SizedBox(height: 8);
+                            if (msg == null || msg == 'EMAIL_NOT_VERIFIED') {
+                              return const SizedBox.shrink();
+                            }
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Text(
                                 msg,
-                                style: text.bodySmall?.copyWith(
-                                  color: Colors.red[300],
-                                ),
+                                style: text.bodySmall?.copyWith(color: Colors.red[300]),
                               ),
                             );
                           },
@@ -209,39 +206,24 @@ class _LoginPageState extends State<LoginPage> {
                         ValueListenableBuilder<bool>(
                           valueListenable: _vm.loading,
                           builder: (_, isLoading, __) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                boxShadow: const [
-                                  BoxShadow(
-                                    blurRadius: 14,
-                                    offset: Offset(0, 6),
-                                    color: Color(0x44FB6F92), // pastel glow
+                            return SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: isLoading ? null : _submit,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFF3B4C3),
+                                  foregroundColor: Colors.black,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
-                                ],
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: isLoading ? null : _submit,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: _pinkBattle,
-                                    foregroundColor: Colors.black,
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    elevation: 6,
-                                    shadowColor: const Color(0x44FB6F92),
-                                  ),
-                                  child: isLoading
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        )
-                                      : const Text('Login'),
                                 ),
+                                child: isLoading
+                                    ? const SizedBox(
+                                        width: 20, height: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : const Text('Login'),
                               ),
                             );
                           },
@@ -249,18 +231,16 @@ class _LoginPageState extends State<LoginPage> {
                       ],
                     ),
                   ),
+                  SizedBox(height: vGap),
 
-                  const SizedBox(height: 26),
-
+                  // Social (tuỳ bạn bật sau)
                   Row(
                     children: [
                       Expanded(child: Container(height: 1, color: Colors.white10)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(
-                          'or continue with',
-                          style: text.labelMedium?.copyWith(color: Colors.white60),
-                        ),
+                        child: Text('or continue with',
+                            style: text.labelMedium?.copyWith(color: Colors.white60)),
                       ),
                       Expanded(child: Container(height: 1, color: Colors.white10)),
                     ],
@@ -269,28 +249,20 @@ class _LoginPageState extends State<LoginPage> {
 
                   _SocialButton(
                     label: 'Continue with Google',
-                    icon: const Icon(Icons.g_mobiledata_rounded,
-                        size: 24, color: Colors.white),
-                    background: Colors.white.withOpacity(0.08),
-                    onPressed: () {
-                      // TODO: OAuth Google
-                    },
+                    icon: const Icon(Icons.g_mobiledata_rounded, size: 24, color: Colors.white),
+                    onPressed: () {/* TODO */},
                   ),
                   const SizedBox(height: 12),
                   _SocialButton(
                     label: 'Continue with Facebook',
                     icon: const Icon(Icons.facebook_rounded, color: Colors.white),
-                    background: Colors.white.withOpacity(0.08),
-                    onPressed: () {
-                      // TODO: OAuth Facebook
-                    },
+                    onPressed: () {/* TODO */},
                   ),
 
-                  SizedBox(height: vGap + 10),
-
+                  const SizedBox(height: 24),
                   Center(
                     child: TextButton(
-                      onPressed: () => Navigator.pushNamed(context, '/auth/signup'),
+                      onPressed: () => Navigator.pushReplacementNamed(context, '/auth/signup'),
                       child: const Text("Don't have an account? Sign up"),
                     ),
                   ),
@@ -336,15 +308,15 @@ class _BBTextField extends StatelessWidget {
         fillColor: const Color(0xFF3A3150),
         enabledBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.white10),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
         ),
         focusedBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: Colors.white30),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(16),
         ),
         errorBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.redAccent),
-          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.redAccent),
+          borderRadius: BorderRadius.circular(16),
         ),
         suffixIcon: suffixIcon,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -357,13 +329,11 @@ class _SocialButton extends StatelessWidget {
   final String label;
   final Widget icon;
   final VoidCallback onPressed;
-  final Color? background;
 
   const _SocialButton({
     required this.label,
     required this.icon,
     required this.onPressed,
-    this.background,
   });
 
   @override
@@ -376,10 +346,10 @@ class _SocialButton extends StatelessWidget {
         label: Text(label),
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.white,
-          backgroundColor: background ?? Colors.white12,
+          backgroundColor: Colors.white12,
           side: const BorderSide(color: Colors.white24, width: 1.2),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),

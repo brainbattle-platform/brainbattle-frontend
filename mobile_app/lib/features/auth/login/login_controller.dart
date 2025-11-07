@@ -1,40 +1,39 @@
-import 'dart:async';
+// lib/features/auth/login/login_controller.dart (rút gọn ý tưởng)
 import 'package:flutter/foundation.dart';
-import '../data/auth_repository.dart';
+import '../../../core/network/auth_api.dart';
+import '../../../core/services/token_storage.dart';
+import 'login_repository.dart';
 
-/// ViewModel (không phụ thuộc UI), sẵn sàng nối BE sau này
-class LoginController with ChangeNotifier {
-  final ValueNotifier<bool> loading = ValueNotifier(false);
-  final ValueNotifier<bool> obscurePassword = ValueNotifier(true);
-  final ValueNotifier<String?> error = ValueNotifier(null);
+class LoginController {
+  final loading = ValueNotifier<bool>(false);
+  final error = ValueNotifier<String?>(null);
+  final obscurePassword = ValueNotifier<bool>(true);
 
-  String? get errorMessage => error.value;
+  late final LoginRepository _repo;
 
-  final AuthRepository _repo = AuthRepositoryStub(); // DI sau này
+  LoginController() {
+    _repo = LoginRepository(AuthApi(), TokenStorage());
+  }
 
   Future<bool> login(String email, String password) async {
-    error.value = null;
-    loading.value = true;
     try {
-      final ok = await _repo.login(email: email, password: password);
-      return ok;
+      loading.value = true;
+      error.value = null;
+      await _repo.login(email, password);
+      return true;
     } catch (e) {
-      error.value = e.toString();
+      // Đừng để toString() ra “Exception: …”
+      error.value = e is Exception ? e.toString().replaceFirst('Exception: ', '') : 'Login failed';
       return false;
     } finally {
       loading.value = false;
     }
   }
 
-  void togglePassword() {
-    obscurePassword.value = !obscurePassword.value;
-  }
-
-  @override
+  void togglePassword() => obscurePassword.value = !obscurePassword.value;
   void dispose() {
     loading.dispose();
-    obscurePassword.dispose();
     error.dispose();
-    super.dispose();
+    obscurePassword.dispose();
   }
 }
