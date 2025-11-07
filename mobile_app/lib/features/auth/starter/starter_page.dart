@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../community/community_shell.dart';
 import '../../auth/login/login_page.dart';
 import '../../shortvideo/shortvideo.dart';
+import '../../auth/signup/sign_up_page.dart';
 
 class StarterPage extends StatefulWidget {
   const StarterPage({super.key});
@@ -233,7 +234,7 @@ class _Popup extends StatelessWidget {
                     icon: Icons.person_add_alt_1_rounded,
                     label: 'Sign up',
                     onPressed: () =>
-                        Navigator.pushNamed(context, CommunityShell.routeName),
+                        Navigator.pushNamed(context, SignUpPage.routeName),
                   ),
                 ),
                 const SizedBox(width: 12),
