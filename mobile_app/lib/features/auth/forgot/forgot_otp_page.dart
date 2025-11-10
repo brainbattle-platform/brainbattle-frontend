@@ -1,86 +1,57 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
-import '../signup/signup_controller.dart';
-import '../complete/complete_profile_page.dart';
+import 'forgot_new_password_page.dart';
 import 'package:lottie/lottie.dart';
 
-class VerifyOtpPage extends StatefulWidget {
+class ForgotOtpPage extends StatefulWidget {
+  const ForgotOtpPage({
+    super.key,
+    required this.baseUrl,
+    required this.email,
+  });
+
+  static const routeName = '/auth/forgot/otp';
+  final String baseUrl;
   final String email;
-  const VerifyOtpPage({super.key, required this.email});
-  static const routeName = '/auth/verify-otp';
 
   @override
-  State<VerifyOtpPage> createState() => _VerifyOtpPageState();
+  State<ForgotOtpPage> createState() => _ForgotOtpPageState();
 }
 
-class _VerifyOtpPageState extends State<VerifyOtpPage> {
+class _ForgotOtpPageState extends State<ForgotOtpPage> {
   final _cells = List.generate(6, (_) => TextEditingController());
   final _nodes = List.generate(6, (_) => FocusNode());
-  late final SignUpController _vm;
-  int _seconds = 60;
-  Timer? _timer;
 
   static const _pink = Color(0xFFF3B4C3);
-
-  @override
-  void initState() {
-    super.initState();
-    _vm = SignUpController();
-    _startTimer();
-  }
 
   @override
   void dispose() {
     for (final c in _cells) c.dispose();
     for (final n in _nodes) n.dispose();
-    _timer?.cancel();
-    _vm.dispose();
     super.dispose();
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    _seconds = 60;
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) return;
-      setState(() {
-        _seconds--;
-        if (_seconds <= 0) t.cancel();
-      });
-    });
   }
 
   String get _otp => _cells.map((c) => c.text).join();
 
-  Future<void> _resend() async {
-    if (_seconds > 0) return;
-    final ok = await _vm.resendOtp(widget.email);
-    if (!mounted) return;
-    if (ok) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Code resent')));
-      _startTimer();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_vm.errorMessage ?? 'Cannot resend code')),
-      );
-    }
+  String? _validate() {
+    return RegExp(r'^\d{6}$').hasMatch(_otp) ? null : 'Please enter the 6-digit code';
   }
 
-  void _goNext() {
-    if (_otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the 6-digit code')),
-      );
+  void _continue() {
+    final err = _validate();
+    if (err != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
       return;
     }
-    Navigator.push(
+    Navigator.pushReplacementNamed(
       context,
-      MaterialPageRoute(
-        builder: (_) => CompleteProfilePage(email: widget.email, otp: _otp),
-      ),
+      ForgotNewPasswordPage.routeName,
+      arguments: {
+        'baseUrl': widget.baseUrl,
+        'email': widget.email,
+        'otp': _otp,
+      },
     );
   }
 
@@ -102,10 +73,9 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
       ),
       body: Stack(
         children: [
-          // 🔹 Lottie background layer
           Positioned.fill(
             child: Opacity(
-              opacity: 0.5, // nhẹ để không làm rối UI
+              opacity: 0.5,
               child: Lottie.asset(
                 'assets/animations/animation_point.json',
                 fit: BoxFit.cover,
@@ -114,7 +84,6 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
               ),
             ),
           ),
-
           SafeArea(
             child: Center(
               child: ConstrainedBox(
@@ -127,9 +96,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                       const Hero(
                         tag: 'bb_logo',
                         child: Image(
-                          image: AssetImage(
-                            'assets/brainbattle_logo_light_pink.png',
-                          ),
+                          image: AssetImage('assets/brainbattle_logo_light_pink.png'),
                           width: 72,
                           height: 72,
                         ),
@@ -151,7 +118,6 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                       ),
                       const SizedBox(height: 24),
 
-                      // OTP cells
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: List.generate(6, (i) {
@@ -174,45 +140,28 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                                 fillColor: const Color(0xFF3A3150),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: Colors.white10,
-                                  ),
+                                  borderSide: const BorderSide(color: Colors.white10),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: Colors.white30,
-                                  ),
+                                  borderSide: const BorderSide(color: Colors.white30),
                                 ),
                               ),
                               onChanged: (v) {
-                                if (v.isNotEmpty && i < 5)
-                                  _nodes[i + 1].requestFocus();
-                                if (v.isEmpty && i > 0)
-                                  _nodes[i - 1].requestFocus();
+                                if (v.isNotEmpty && i < 5) _nodes[i + 1].requestFocus();
+                                if (v.isEmpty && i > 0) _nodes[i - 1].requestFocus();
                               },
+                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                             ),
                           );
                         }),
                       ),
                       const SizedBox(height: 18),
 
-                      // Resend
-                      TextButton(
-                        onPressed: _seconds > 0 ? null : _resend,
-                        child: Text(
-                          _seconds > 0
-                              ? 'Resend in $_seconds s'
-                              : 'Resend code',
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Continue
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _goNext,
+                          onPressed: _continue,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _pink,
                             foregroundColor: Colors.black,
