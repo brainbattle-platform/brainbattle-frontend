@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
 import 'signup_controller.dart';
 import '../verify/verify_otp_page.dart';
+import 'package:lottie/lottie.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -36,8 +37,9 @@ class _SignUpPageState extends State<SignUpPage> {
 
   String? _validateEmail(String? v) {
     if (v == null || v.trim().isEmpty) return 'Please enter your email';
-    final ok = RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
-        .hasMatch(v.trim());
+    final ok = RegExp(
+      r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
+    ).hasMatch(v.trim());
     if (!ok) return 'Invalid email';
     return null;
   }
@@ -51,9 +53,9 @@ class _SignUpPageState extends State<SignUpPage> {
     if (!mounted) return;
 
     if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Verification code sent!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Verification code sent!')));
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => VerifyOtpPage(email: email)),
@@ -83,93 +85,128 @@ class _SignUpPageState extends State<SignUpPage> {
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const _HeaderTitle(icon: Icons.mark_email_unread_rounded, text: 'Verify email'),
+        title: const _HeaderTitle(
+          icon: Icons.mark_email_unread_rounded,
+          text: 'Verify email',
+        ),
       ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 440),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(height: vGap),
-                  const Hero(
-                    tag: 'bb_logo',
-                    child: Image(
-                      image: AssetImage('assets/brainbattle_logo_light_pink.png'),
-                      width: 90,
-                      height: 90,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Verify your email',
-                    textAlign: TextAlign.center,
-                    style: text.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 22,
-                      color: _pinkBattle,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'We will send a 6-digit code to your inbox.',
-                    textAlign: TextAlign.center,
-                    style: text.bodyMedium?.copyWith(color: Colors.white70, fontSize: 14),
-                  ),
-                  SizedBox(height: vGap + 8),
-
-                  Form(
-                    key: _formKey,
-                    child: _BBTextField(
-                      label: 'Email',
-                      controller: _email,
-                      keyboardType: TextInputType.emailAddress,
-                      validator: _validateEmail,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-
-                  ValueListenableBuilder<bool>(
-                    valueListenable: _vm.loading,
-                    builder: (_, isLoading, __) {
-                      return SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: isLoading ? null : _submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _pinkBattle,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            elevation: 6,
-                            shadowColor: const Color(0x44FB6F92),
-                          ),
-                          child: isLoading
-                              ? const SizedBox(
-                                  width: 20, height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Text('Send code'),
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 26),
-                  Center(
-                    child: TextButton(
-                      onPressed: () => Navigator.pushReplacementNamed(context, '/auth/login'),
-                      child: const Text('Already have an account? Login'),
-                    ),
-                  ),
-                ],
+      body: Stack(
+        children: [
+          // 🔹 Lottie background layer
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.5, // nhẹ để không làm rối UI
+              child: Lottie.asset(
+                'assets/animations/animation_point.json',
+                fit: BoxFit.cover,
+                repeat: true,
+                frameRate: FrameRate.max,
               ),
             ),
           ),
-        ),
+
+          SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: vGap),
+                      const Hero(
+                        tag: 'bb_logo',
+                        child: Image(
+                          image: AssetImage(
+                            'assets/brainbattle_logo_light_pink.png',
+                          ),
+                          width: 90,
+                          height: 90,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        'Verify your email',
+                        textAlign: TextAlign.center,
+                        style: text.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 22,
+                          color: _pinkBattle,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'We will send a 6-digit code to your inbox.',
+                        textAlign: TextAlign.center,
+                        style: text.bodyMedium?.copyWith(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                      SizedBox(height: vGap + 8),
+
+                      Form(
+                        key: _formKey,
+                        child: _BBTextField(
+                          label: 'Email',
+                          controller: _email,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: _validateEmail,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _vm.loading,
+                        builder: (_, isLoading, __) {
+                          return SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: isLoading ? null : _submit,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _pinkBattle,
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                elevation: 6,
+                                shadowColor: const Color(0x44FB6F92),
+                              ),
+                              child: isLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text('Send code'),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 26),
+                      Center(
+                        child: TextButton(
+                          onPressed: () => Navigator.pushReplacementNamed(
+                            context,
+                            '/auth/login',
+                          ),
+                          child: const Text('Already have an account? Login'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -243,7 +280,10 @@ class _BBTextField extends StatelessWidget {
           borderSide: BorderSide(color: Colors.redAccent),
           borderRadius: BorderRadius.circular(14),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
       ),
     );
   }

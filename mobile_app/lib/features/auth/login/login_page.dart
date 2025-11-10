@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
 import 'login_controller.dart';
 import '../verify/verify_otp_page.dart';
+import 'package:lottie/lottie.dart';
+import '../forgot/forgot_start_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -42,9 +44,9 @@ class _LoginPageState extends State<LoginPage> {
     final err = _vm.error.value;
 
     if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Logged in!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Logged in!')));
       Navigator.pop(context); // hoặc pushReplacementNamed('/home')
       return;
     }
@@ -60,15 +62,16 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(err ?? 'Login failed')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(err ?? 'Login failed')));
   }
 
   String? _validateEmail(String? v) {
     if (v == null || v.trim().isEmpty) return 'Please enter your email';
-    final ok = RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
-        .hasMatch(v.trim());
+    final ok = RegExp(
+      r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
+    ).hasMatch(v.trim());
     if (!ok) return 'Invalid email';
     return null;
   }
@@ -108,169 +111,218 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 440),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(height: vGap),
-                  const Hero(
-                    tag: 'bb_logo',
-                    child: Image(
-                      image: AssetImage('assets/brainbattle_logo_light_pink.png'),
-                      width: 90,
-                      height: 90,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    'Welcome back!',
-                    textAlign: TextAlign.center,
-                    style: text.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Sign in to continue learning.',
-                    textAlign: TextAlign.center,
-                    style: text.bodyMedium?.copyWith(color: Colors.white70),
-                  ),
-                  SizedBox(height: vGap + 8),
-
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        _BBTextField(
-                          label: 'Email',
-                          controller: _email,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: _validateEmail,
-                        ),
-                        const SizedBox(height: 14),
-                        ValueListenableBuilder<bool>(
-                          valueListenable: _vm.obscurePassword,
-                          builder: (_, obscure, __) {
-                            return _BBTextField(
-                              label: 'Password',
-                              controller: _password,
-                              obscureText: obscure,
-                              validator: _validatePassword,
-                              suffixIcon: IconButton(
-                                onPressed: _vm.togglePassword,
-                                icon: Icon(
-                                  obscure
-                                      ? Icons.visibility_off_rounded
-                                      : Icons.visibility_rounded,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              HapticFeedback.selectionClick();
-                              // TODO: Forgot password (tương tự verify email)
-                            },
-                            child: const Text('Forgot password?'),
-                          ),
-                        ),
-
-                        const SizedBox(height: 6),
-                        ValueListenableBuilder<String?>(
-                          valueListenable: _vm.error,
-                          builder: (_, msg, __) {
-                            if (msg == null || msg == 'EMAIL_NOT_VERIFIED') {
-                              return const SizedBox.shrink();
-                            }
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: Text(
-                                msg,
-                                style: text.bodySmall?.copyWith(color: Colors.red[300]),
-                              ),
-                            );
-                          },
-                        ),
-
-                        ValueListenableBuilder<bool>(
-                          valueListenable: _vm.loading,
-                          builder: (_, isLoading, __) {
-                            return SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: isLoading ? null : _submit,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFF3B4C3),
-                                  foregroundColor: Colors.black,
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                child: isLoading
-                                    ? const SizedBox(
-                                        width: 20, height: 20,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                      )
-                                    : const Text('Login'),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: vGap),
-
-                  // Social (tuỳ bạn bật sau)
-                  Row(
-                    children: [
-                      Expanded(child: Container(height: 1, color: Colors.white10)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text('or continue with',
-                            style: text.labelMedium?.copyWith(color: Colors.white60)),
-                      ),
-                      Expanded(child: Container(height: 1, color: Colors.white10)),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  _SocialButton(
-                    label: 'Continue with Google',
-                    icon: const Icon(Icons.g_mobiledata_rounded, size: 24, color: Colors.white),
-                    onPressed: () {/* TODO */},
-                  ),
-                  const SizedBox(height: 12),
-                  _SocialButton(
-                    label: 'Continue with Facebook',
-                    icon: const Icon(Icons.facebook_rounded, color: Colors.white),
-                    onPressed: () {/* TODO */},
-                  ),
-
-                  const SizedBox(height: 24),
-                  Center(
-                    child: TextButton(
-                      onPressed: () => Navigator.pushReplacementNamed(context, '/auth/signup'),
-                      child: const Text("Don't have an account? Sign up"),
-                    ),
-                  ),
-                ],
+      body: Stack(
+        children: [
+          // 🔹 Lottie background layer
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.5, // nhẹ để không làm rối UI
+              child: Lottie.asset(
+                'assets/animations/animation_point.json',
+                fit: BoxFit.cover,
+                repeat: true,
+                frameRate: FrameRate.max,
               ),
             ),
           ),
-        ),
+
+          SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: vGap),
+                      const Hero(
+                        tag: 'bb_logo',
+                        child: Image(
+                          image: AssetImage(
+                            'assets/brainbattle_logo_light_pink.png',
+                          ),
+                          width: 90,
+                          height: 90,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        'Welcome back!',
+                        textAlign: TextAlign.center,
+                        style: text.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Sign in to continue learning.',
+                        textAlign: TextAlign.center,
+                        style: text.bodyMedium?.copyWith(color: Colors.white70),
+                      ),
+                      SizedBox(height: vGap + 8),
+
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            _BBTextField(
+                              label: 'Email',
+                              controller: _email,
+                              keyboardType: TextInputType.emailAddress,
+                              validator: _validateEmail,
+                            ),
+                            const SizedBox(height: 14),
+                            ValueListenableBuilder<bool>(
+                              valueListenable: _vm.obscurePassword,
+                              builder: (_, obscure, __) {
+                                return _BBTextField(
+                                  label: 'Password',
+                                  controller: _password,
+                                  obscureText: obscure,
+                                  validator: _validatePassword,
+                                  suffixIcon: IconButton(
+                                    onPressed: _vm.togglePassword,
+                                    icon: Icon(
+                                      obscure
+                                          ? Icons.visibility_off_rounded
+                                          : Icons.visibility_rounded,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pushNamed(ForgotStartPage.routeName);
+
+                                },
+                                child: const Text('Forgot password?'),
+                              ),
+                            ),
+
+                            const SizedBox(height: 6),
+                            ValueListenableBuilder<String?>(
+                              valueListenable: _vm.error,
+                              builder: (_, msg, __) {
+                                if (msg == null ||
+                                    msg == 'EMAIL_NOT_VERIFIED') {
+                                  return const SizedBox.shrink();
+                                }
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Text(
+                                    msg,
+                                    style: text.bodySmall?.copyWith(
+                                      color: Colors.red[300],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+
+                            ValueListenableBuilder<bool>(
+                              valueListenable: _vm.loading,
+                              builder: (_, isLoading, __) {
+                                return SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: isLoading ? null : _submit,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFF3B4C3),
+                                      foregroundColor: Colors.black,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 14,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                    ),
+                                    child: isLoading
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Text('Login'),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: vGap),
+
+                      // Social (tuỳ bạn bật sau)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(height: 1, color: Colors.white10),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              'or continue with',
+                              style: text.labelMedium?.copyWith(
+                                color: Colors.white60,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(height: 1, color: Colors.white10),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      _SocialButton(
+                        label: 'Continue with Google',
+                        icon: const Icon(
+                          Icons.g_mobiledata_rounded,
+                          size: 24,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          /* TODO */
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _SocialButton(
+                        label: 'Continue with Facebook',
+                        icon: const Icon(
+                          Icons.facebook_rounded,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          /* TODO */
+                        },
+                      ),
+
+                      const SizedBox(height: 24),
+                      Center(
+                        child: TextButton(
+                          onPressed: () => Navigator.pushReplacementNamed(
+                            context,
+                            '/auth/signup',
+                          ),
+                          child: const Text("Don't have an account? Sign up"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -319,7 +371,10 @@ class _BBTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
         ),
         suffixIcon: suffixIcon,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
       ),
     );
   }
@@ -349,7 +404,9 @@ class _SocialButton extends StatelessWidget {
           backgroundColor: Colors.white12,
           side: const BorderSide(color: Colors.white24, width: 1.2),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),

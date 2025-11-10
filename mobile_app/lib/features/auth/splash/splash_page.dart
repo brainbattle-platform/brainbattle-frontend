@@ -1,4 +1,3 @@
-// lib/features/auth/splash/splash_page.dart
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../starter/starter_page.dart';
