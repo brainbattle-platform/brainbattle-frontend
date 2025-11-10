@@ -7,6 +7,11 @@ import 'features/auth/login/login_page.dart';
 import 'features/auth/signup/sign_up_page.dart';
 import 'features/auth/verify/verify_otp_page.dart';
 import 'features/auth/complete/complete_profile_page.dart';
+import 'features/auth/forgot/forgot_start_page.dart';
+import 'features/auth/forgot/forgot_otp_page.dart';
+import 'features/auth/forgot/forgot_new_password_page.dart';
+
+import 'package:mobile_app/core/network/api_base.dart';
 
 import 'features/learning/learning.dart';
 
@@ -42,6 +47,28 @@ class BrainBattleApp extends StatelessWidget {
           return CompleteProfilePage(
             email: (args?['email'] as String?) ?? '',
             otp: (args?['otp'] as String?) ?? '',
+          );
+        },
+        ForgotStartPage.routeName: (ctx) {
+          final raw = apiBase(); // ví dụ: '192.168.1.34:3000' hoặc đã có http
+          final baseUrl = raw.startsWith('http') ? raw : 'http://$raw';
+          return ForgotStartPage(baseUrl: baseUrl);
+        },
+        ForgotOtpPage.routeName: (ctx) {
+          final args = ModalRoute.of(ctx)?.settings.arguments as Map?;
+          final baseUrl = (args?['baseUrl'] as String?) ?? '';
+          final email = (args?['email'] as String?) ?? '';
+          return ForgotOtpPage(baseUrl: baseUrl, email: email);
+        },
+        ForgotNewPasswordPage.routeName: (ctx) {
+          final args = ModalRoute.of(ctx)?.settings.arguments as Map?;
+          final baseUrl = (args?['baseUrl'] as String?) ?? '';
+          final email = (args?['email'] as String?) ?? '';
+          final otp = (args?['otp'] as String?) ?? '';
+          return ForgotNewPasswordPage(
+            baseUrl: baseUrl,
+            email: email,
+            otp: otp,
           );
         },
       },

@@ -70,6 +70,10 @@ flutter:
   assets:
      - assets/brainbattle_logo_light_pink.png
      - assets/animations/logo_animation_light.json
+     - assets/animations/animation_background.json
+     - assets/animations/animation_global.json
+     - assets/animations/animation_star.json
+     - assets/animations/animation_point.json
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

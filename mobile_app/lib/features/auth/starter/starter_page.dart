@@ -3,6 +3,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../auth/login/login_page.dart';
 import '../../shortvideo/shortvideo.dart';
 import '../../auth/signup/sign_up_page.dart';
+import 'package:lottie/lottie.dart';
+
 
 class StarterPage extends StatefulWidget {
   const StarterPage({super.key});
@@ -78,18 +80,35 @@ class _StarterPageState extends State<StarterPage> {
 
     return Scaffold(
       backgroundColor: BBColors.darkBg,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            _Header(titleSize: titleSize, subSize: subSize),
-            _Popup(
-              minHeight: cardMinHeight,
-              pageCtrl: _pageCtrl,
-              currentIndex: _current,
-              onPageChanged: (i) => setState(() => _current = i),
+      body: Stack(
+        children: [
+          // 🔹 Lottie background layer
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.5, // nhẹ để không làm rối UI
+              child: Lottie.asset(
+                'assets/animations/animation_point.json',
+                fit: BoxFit.cover,
+                repeat: true,
+                frameRate: FrameRate.max,
+              ),
             ),
-          ],
-        ),
+          ),
+
+          SafeArea(
+            child: Stack(
+              children: [
+                _Header(titleSize: titleSize, subSize: subSize),
+                _Popup(
+                  minHeight: cardMinHeight,
+                  pageCtrl: _pageCtrl,
+                  currentIndex: _current,
+                  onPageChanged: (i) => setState(() => _current = i),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

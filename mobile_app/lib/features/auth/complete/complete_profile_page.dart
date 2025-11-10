@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
 import '../signup/signup_controller.dart';
+import 'package:lottie/lottie.dart';
 
 class CompleteProfilePage extends StatefulWidget {
   final String email;
   final String otp;
-  const CompleteProfilePage({super.key, required this.email, required this.otp});
+  const CompleteProfilePage({
+    super.key,
+    required this.email,
+    required this.otp,
+  });
   static const routeName = '/auth/complete';
 
   @override
@@ -69,10 +74,13 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
     if (!mounted) return;
 
     if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created!')),
-      );
-      Navigator.popUntil(context, (r) => r.isFirst); // về đầu, hoặc push vào Home
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Account created!')));
+      Navigator.popUntil(
+        context,
+        (r) => r.isFirst,
+      ); // về đầu, hoặc push vào Home
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_vm.errorMessage ?? 'Register failed')),
@@ -96,95 +104,130 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
         title: const Text('Create your profile'),
         centerTitle: true,
       ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 440),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Hero(
-                    tag: 'bb_logo',
-                    child: Image(
-                      image: AssetImage('assets/brainbattle_logo_light_pink.png'),
-                      width: 72, height: 72,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text('Set your display name & password',
-                      textAlign: TextAlign.center,
-                      style: text.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800, color: _pink,
-                      )),
-                  const SizedBox(height: 20),
 
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: [
-                        _BBTextField(
-                          label: 'Display name',
-                          controller: _display,
-                          validator: _validateDisplay,
-                        ),
-                        const SizedBox(height: 14),
-                        ValueListenableBuilder<bool>(
-                          valueListenable: _obscure,
-                          builder: (_, ob, __) {
-                            return _BBTextField(
-                              label: 'Password',
-                              controller: _password,
-                              validator: _validatePassword,
-                              obscureText: ob,
-                              suffixIcon: IconButton(
-                                onPressed: () => _obscure.value = !ob,
-                                icon: Icon(
-                                  ob ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 14),
-                        _BBTextField(
-                          label: 'Confirm password',
-                          controller: _confirm,
-                          validator: _validateConfirm,
-                          obscureText: true,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-
-                  ValueListenableBuilder<bool>(
-                    valueListenable: _vm.loading,
-                    builder: (_, isLoading, __) {
-                      return SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: isLoading ? null : _submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _pink,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          ),
-                          child: isLoading
-                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                              : const Text('Create account'),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.5, 
+              child: Lottie.asset(
+                'assets/animations/animation_point.json',
+                fit: BoxFit.cover,
+                repeat: true,
+                frameRate: FrameRate.max,
               ),
             ),
           ),
-        ),
+
+          SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 440),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Hero(
+                        tag: 'bb_logo',
+                        child: Image(
+                          image: AssetImage(
+                            'assets/brainbattle_logo_light_pink.png',
+                          ),
+                          width: 72,
+                          height: 72,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        'Set your display name & password',
+                        textAlign: TextAlign.center,
+                        style: text.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: _pink,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            _BBTextField(
+                              label: 'Display name',
+                              controller: _display,
+                              validator: _validateDisplay,
+                            ),
+                            const SizedBox(height: 14),
+                            ValueListenableBuilder<bool>(
+                              valueListenable: _obscure,
+                              builder: (_, ob, __) {
+                                return _BBTextField(
+                                  label: 'Password',
+                                  controller: _password,
+                                  validator: _validatePassword,
+                                  obscureText: ob,
+                                  suffixIcon: IconButton(
+                                    onPressed: () => _obscure.value = !ob,
+                                    icon: Icon(
+                                      ob
+                                          ? Icons.visibility_off_rounded
+                                          : Icons.visibility_rounded,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 14),
+                            _BBTextField(
+                              label: 'Confirm password',
+                              controller: _confirm,
+                              validator: _validateConfirm,
+                              obscureText: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _vm.loading,
+                        builder: (_, isLoading, __) {
+                          return SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: isLoading ? null : _submit,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _pink,
+                                foregroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: isLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text('Create account'),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -233,7 +276,10 @@ class _BBTextField extends StatelessWidget {
           borderSide: BorderSide(color: Colors.redAccent),
           borderRadius: BorderRadius.circular(14),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         suffixIcon: suffixIcon,
       ),
     );
