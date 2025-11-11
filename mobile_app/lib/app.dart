@@ -15,7 +15,9 @@ import 'package:mobile_app/core/network/api_base.dart';
 
 import 'features/learning/learning.dart';
 
-import 'features/community/community_shell.dart';
+import 'features/community/ui/shell/community_shell.dart';
+import 'features/community/ui/thread/thread_page.dart';
+import 'features/community/ui/clan/new_clan_page.dart';
 import 'features/shortvideo/shortvideo.dart';
 
 class BrainBattleApp extends StatelessWidget {
@@ -33,6 +35,8 @@ class BrainBattleApp extends StatelessWidget {
       routes: {
         StarterPage.routeName: (_) => const StarterPage(),
         CommunityShell.routeName: (_) => const CommunityShell(),
+        NewClanPage.routeName: (_) => const NewClanPage(),
+        ThreadPage.routeName: (_) => const ThreadPage(),
         LessonsScreen.routeName: (_) => const LessonsScreen(),
         ShortVideoShell.routeName: (c) => const ShortVideoShell(),
         LoginPage.routeName: (_) => const LoginPage(),
