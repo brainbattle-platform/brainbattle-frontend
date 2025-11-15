@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../shortvideo.dart';                       // ShortVideoFeedPage()
 import '../../learning/ui/galaxy_map_screen.dart';   // hoặc trang Lesson bạn muốn
-import '../../community/community_shell.dart'; // đã có trong project
+import '../../community/ui/shell/community_shell.dart';
 
 class ShortVideoShell extends StatefulWidget {
   const ShortVideoShell({super.key});
