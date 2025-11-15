@@ -16,6 +16,7 @@ class _NewClanPageState extends State<NewClanPage> {
 
   final _search = TextEditingController();
   final _clanName = TextEditingController();
+  final _description = TextEditingController();
   final _scroll = ScrollController();
 
   // mock danh sách users – sau này bind từ BE
@@ -64,6 +65,7 @@ class _NewClanPageState extends State<NewClanPage> {
   void dispose() {
     _search.dispose();
     _clanName.dispose();
+    _description.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -77,9 +79,8 @@ class _NewClanPageState extends State<NewClanPage> {
         ? _allUsers
         : _allUsers.where((u) => u.name.toLowerCase().contains(query)).toList();
 
-    final selectedUsers = _allUsers
-        .where((u) => _selectedIds.contains(u.id))
-        .toList();
+    final selectedUsers =
+        _allUsers.where((u) => _selectedIds.contains(u.id)).toList();
 
     final canCreate =
         _clanName.text.trim().isNotEmpty && _selectedIds.length >= 2;
@@ -130,7 +131,6 @@ class _NewClanPageState extends State<NewClanPage> {
                     ),
                   ),
                   const Spacer(),
-                  // Tùy chọn: nút Create ở header (ẩn khi chưa hợp lệ)
                   if (canCreate)
                     TextButton(
                       onPressed: _onCreateClan,
@@ -140,10 +140,11 @@ class _NewClanPageState extends State<NewClanPage> {
               ),
             ),
 
-            // ===== Info group: Avatar + Name input =====
+            // ===== Info group: Avatar + Name + Description =====
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   GestureDetector(
                     onTap: _pickImageMock,
@@ -183,25 +184,50 @@ class _NewClanPageState extends State<NewClanPage> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: TextField(
-                      controller: _clanName,
-                      onChanged: (_) => setState(() {}),
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: 'Clan name',
-                        hintStyle: const TextStyle(color: Colors.white54),
-                        filled: true,
-                        fillColor: const Color(0xFF2F2941),
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _clanName,
+                          onChanged: (_) => setState(() {}),
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Clan name',
+                            hintStyle: const TextStyle(color: Colors.white54),
+                            filled: true,
+                            fillColor: const Color(0xFF2F2941),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: BorderSide.none,
+                        const SizedBox(height: 8),
+                        TextField(
+                          controller: _description,
+                          maxLines: 3,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Describe your clan (optional)…',
+                            hintStyle: const TextStyle(color: Colors.white54),
+                            filled: true,
+                            fillColor: const Color(0xFF2F2941),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(14),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ],
@@ -333,20 +359,19 @@ class _NewClanPageState extends State<NewClanPage> {
 
   void _onCreateClan() {
     final name = _clanName.text.trim();
-    final members = _allUsers
-        .where((u) => _selectedIds.contains(u.id))
-        .toList();
+    final desc = _description.text.trim();
+    final members =
+        _allUsers.where((u) => _selectedIds.contains(u.id)).toList();
 
+    // TODO: gửi name, desc, members lên BE
     // FE-only: fake threadId
     final fakeThreadId = 't_${DateTime.now().millisecondsSinceEpoch}';
 
     // Trả về threadId để ChatsPage có thể điều hướng vào ThreadPage
     Navigator.pop(context, fakeThreadId);
 
-    // (Giữ snackBar nếu muốn, nhưng nếu push tiếp sang ThreadPage thì không cần)
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   SnackBar(content: Text('Clan "$name" created with ${members.length} members')),
-    // );
+    // Debug (nếu cần)
+    // print('Create clan: $name / desc="$desc" with ${members.length} members');
   }
 }
 
@@ -378,9 +403,8 @@ class SelectableUserTile extends StatelessWidget {
           leading: CircleAvatar(
             radius: 22,
             backgroundColor: const Color(0xFF443A5B),
-            backgroundImage: (user.avatarUrl != null)
-                ? NetworkImage(user.avatarUrl!)
-                : null,
+            backgroundImage:
+                (user.avatarUrl != null) ? NetworkImage(user.avatarUrl!) : null,
             child: (user.avatarUrl == null)
                 ? const Icon(Icons.person, color: Colors.white70)
                 : null,

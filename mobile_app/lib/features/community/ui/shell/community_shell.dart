@@ -53,8 +53,8 @@ class _CommunityShellState extends State<CommunityShell> {
               onDestinationSelected: (i) => setState(() => _index = i),
               destinations: const [
                 NavigationDestination(
-                  icon: Icon(Icons.chat_bubble_outline),
-                  selectedIcon: Icon(Icons.chat_bubble),
+                  icon: Icon(Icons.chat_bubble_outline_rounded),
+                  selectedIcon: Icon(Icons.chat_bubble_rounded),
                   label: 'Chats',
                 ),
                 NavigationDestination(
@@ -67,6 +67,7 @@ class _CommunityShellState extends State<CommunityShell> {
           ),
         ),
       ),
+
       floatingActionButton: _index == 0
           ? FloatingActionButton.extended(
               backgroundColor: _accent,
@@ -78,6 +79,7 @@ class _CommunityShellState extends State<CommunityShell> {
           : null,
     );
   }
+
   Future<void> _onNewClan() async {
     final result = await Navigator.pushNamed(context, CommunityRoutes.newClan);
 
@@ -86,10 +88,7 @@ class _CommunityShellState extends State<CommunityShell> {
       Navigator.pushNamed(
         context,
         CommunityRoutes.thread,
-        arguments: ThreadArgs(
-          result,
-          title: 'New clan',
-        ), 
+        arguments: ThreadArgs(result, title: 'New clan'),
       );
     }
   }

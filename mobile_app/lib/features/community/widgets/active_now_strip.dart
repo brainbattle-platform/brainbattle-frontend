@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import '../data/models.dart';
+import 'avatar_name.dart';
 
-typedef ActiveUserTap = void Function(UserLite user);
+class ActiveUser {
+  final String name;
+  final String? avatarUrl;
+
+  const ActiveUser({required this.name, this.avatarUrl});
+}
+
+typedef ActiveUserTap = void Function(ActiveUser user);
 
 class ActiveNowStrip extends StatelessWidget {
-  final List<UserLite> users;
-  final ActiveUserTap onUserTap;
+  final List<ActiveUser> users;
+  final ActiveUserTap? onUserTap;
 
   const ActiveNowStrip({
     super.key,
     required this.users,
-    required this.onUserTap,
+    this.onUserTap,
   });
 
   @override
@@ -23,53 +30,37 @@ class ActiveNowStrip extends StatelessWidget {
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 12),
         scrollDirection: Axis.horizontal,
+        itemCount: users.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 14),
         itemBuilder: (_, i) {
           final u = users[i];
           return InkWell(
-            onTap: () => onUserTap(u),
-            borderRadius: BorderRadius.circular(16),
-            child: Column(
+            borderRadius: BorderRadius.circular(28),
+            onTap: () => onUserTap?.call(u),
+            child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 26,
-                      backgroundImage: u.avatarUrl != null
-                          ? NetworkImage(u.avatarUrl!)
-                          : const AssetImage('assets/images/default_user.png') as ImageProvider,
-                    ),
-                    // chấm online
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 12, height: 12,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF54D86C),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: BBColors.darkBg, width: 2),
-                        ),
+                AvatarName(name: u.name, avatarUrl: u.avatarUrl),
+                Positioned(
+                  right: 2,
+                  bottom: 18,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: Colors.greenAccent.shade400,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: BBColors.darkBg,
+                        width: 2,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                SizedBox(
-                  width: 62,
-                  child: Text(
-                    u.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ),
               ],
             ),
           );
         },
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemCount: users.length,
       ),
     );
   }

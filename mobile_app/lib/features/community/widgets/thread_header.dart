@@ -3,61 +3,76 @@ import '../../../core/theme/app_theme.dart';
 
 class ThreadHeader extends StatelessWidget {
   final String title;
+  final String? subtitle; // ví dụ: "5 members"
   final String? avatarUrl;
   final VoidCallback onBack;
+  final VoidCallback? onInfo;
 
   const ThreadHeader({
     super.key,
     required this.title,
+    this.subtitle,
     this.avatarUrl,
     required this.onBack,
+    this.onInfo,
   });
 
   @override
   Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+
     return SafeArea(
       bottom: false,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: const BoxDecoration(
-          color: BBColors.darkBg,
-          boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
-        ),
+        color: BBColors.darkBg,
+        padding: const EdgeInsets.fromLTRB(4, 6, 4, 6),
         child: Row(
           children: [
-            InkWell(
-              onTap: onBack,
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 22),
-              ),
+            IconButton(
+              tooltip: 'Back',
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
             ),
-            const SizedBox(width: 10),
             CircleAvatar(
-              radius: 18,
-              backgroundImage: (avatarUrl != null)
-                  ? NetworkImage(avatarUrl!)
-                  : const AssetImage('assets/images/default_user.png') as ImageProvider,
+              radius: 20,
+              backgroundColor: const Color(0xFF443A5B),
+              backgroundImage:
+                  avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+              child: avatarUrl == null
+                  ? const Icon(Icons.person, color: Colors.white70)
+                  : null,
             ),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16, letterSpacing: .2,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.bodySmall?.copyWith(
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             IconButton(
               tooltip: 'Info',
-              onPressed: () {},
+              onPressed: onInfo,
               icon: const Icon(Icons.info_outline, color: Colors.white70),
             ),
           ],
