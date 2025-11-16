@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import '../shortvideo.dart';                       // ShortVideoFeedPage()
-import '../../learning/ui/galaxy_map_screen.dart';   // hoặc trang Lesson bạn muốn
+
+// Short-video FE chính
+import '../shortvideo.dart'; // ShortVideoFeedPage()
+
+// Các feature còn lại
+import '../../battle/ui/battle_shell.dart';
 import '../../community/ui/shell/community_shell.dart';
+import '../../learning/ui/galaxy_map_screen.dart'; // hoặc màn Lesson khác
 
 class ShortVideoShell extends StatefulWidget {
   const ShortVideoShell({super.key});
@@ -13,7 +18,9 @@ class ShortVideoShell extends StatefulWidget {
 
 class _ShortVideoShellState extends State<ShortVideoShell> {
   late final PageController _controller;
-  int _index = 1; // 0 = chat, 1 = shorts, 2 = lessons
+
+  // 0 = battle, 1 = community, 2 = shorts, 3 = learning
+  int _index = 2;
 
   @override
   void initState() {
@@ -29,8 +36,10 @@ class _ShortVideoShellState extends State<ShortVideoShell> {
 
   @override
   Widget build(BuildContext context) {
-    // Gợi ý: để shorts “full black” + hai trang còn lại dùng theme mặc định
-    final bg = _index == 1 ? Colors.black : Theme.of(context).scaffoldBackgroundColor;
+    // Shorts ở giữa → để full black giống TikTok
+    final bg = _index == 2
+        ? Colors.black
+        : Theme.of(context).scaffoldBackgroundColor;
 
     return Scaffold(
       backgroundColor: bg,
@@ -39,13 +48,16 @@ class _ShortVideoShellState extends State<ShortVideoShell> {
         scrollDirection: Axis.horizontal,
         onPageChanged: (i) => setState(() => _index = i),
         children: const [
-          // ← Trang Trái: Community
+          // Trang cực trái: Battle
+          BattleShell(),
+
+          // Trái: Community
           CommunityShell(),
 
           // Giữa: Short video feed (vuốt dọc đổi video)
           ShortVideoFeedPage(),
 
-          // → Trang Phải: Lesson / Galaxy
+          // Phải: Learning / Galaxy
           GalaxyMapScreen(),
         ],
       ),
