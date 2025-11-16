@@ -19,7 +19,6 @@ class Battle3v3LobbyPage extends StatefulWidget {
 }
 
 class _Battle3v3LobbyPageState extends State<Battle3v3LobbyPage> {
-  // giả lập state: role đã pick trong team mình
   final Set<BattleRole> _takenMyTeam = {};
   BattleRole? _myRole = BattleRole.listening;
 
@@ -37,170 +36,260 @@ class _Battle3v3LobbyPageState extends State<Battle3v3LobbyPage> {
         ..add(role);
       _myRole = role;
     });
-    // TODO: call API pick role
   }
+
+  String roleLabel(BattleRole r) {
+    switch (r) {
+      case BattleRole.listening:
+        return 'Listening';
+      case BattleRole.reading:
+        return 'Reading';
+      case BattleRole.writing:
+        return 'Writing';
+    }
+  }
+
+  // ----------------------------------------------------------------------
+  // TEAM PANEL — FIX: only show YOUR role, others always icons or "?"
+  // ----------------------------------------------------------------------
+
+  Widget teamPanel(String title, {bool myTeam = false}) {
+    final players = myTeam
+        ? ['You', 'Teammate', null]   // you + 1 teammate + empty
+        : ['Enemy 1', 'Enemy 2', 'Enemy 3']; // enemies
+
+    // Determine role for YOU only
+    BattleRole? roleOf(int index) {
+      if (myTeam && index == 0) {
+        return _myRole; // ONLY YOU
+      }
+      return null; // teammates do NOT get role from you
+    }
+
+    Icon roleIcon(BattleRole? r) {
+      if (r == null) {
+        return const Icon(Icons.help_outline,
+            size: 18, color: Colors.white24);
+      }
+
+      IconData icon;
+      switch (r) {
+        case BattleRole.listening:
+          icon = Icons.headphones_rounded;
+          break;
+        case BattleRole.reading:
+          icon = Icons.menu_book_rounded;
+          break;
+        case BattleRole.writing:
+          icon = Icons.edit_note_rounded;
+          break;
+      }
+
+      return Icon(icon, size: 18, color: Colors.white70);
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1E1630), Color(0xFF141428)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14)),
+          const SizedBox(height: 10),
+
+          for (int i = 0; i < 3; i++)
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.20),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Color(0xFF2B1640),
+                    child: Icon(Icons.person,
+                        size: 16, color: Colors.white70),
+                  ),
+                  const SizedBox(width: 10),
+
+                  Expanded(
+                    child: Text(
+                      players[i] ?? 'Empty slot',
+                      style: TextStyle(
+                        color: players[i] == null
+                            ? Colors.white24
+                            : Colors.white,
+                        fontWeight: players[i] == 'You'
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+
+                  // 🔥 ONLY YOU has TEXT role
+                  if (players[i] == 'You')
+                    Text(
+                      roleLabel(_myRole!),
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 12),
+                    )
+                  else
+                    // 🔥 Everyone else = ? icon (until real data comes from server)
+                    roleIcon(roleOf(i)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ----------------------------------------------------------------------
+  // ROLE CHIP STYLE
+  // ----------------------------------------------------------------------
+
+  Widget roleChip(BattleRole role, ThemeData theme) {
+    final isSelected = _myRole == role;
+    final isTaken = _takenMyTeam.contains(role) && !isSelected;
+
+    final bgColor = isTaken
+        ? Colors.white12
+        : isSelected
+            ? theme.colorScheme.primary
+            : const Color(0xFF2B1640);
+
+    final textColor = isTaken
+        ? Colors.white38
+        : isSelected
+            ? Colors.black
+            : Colors.white;
+
+    return GestureDetector(
+      onTap: isTaken ? null : () => _pickRole(role),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 18),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: bgColor,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withOpacity(0.5),
+                    blurRadius: 14,
+                    spreadRadius: 1,
+                  )
+                ]
+              : [],
+        ),
+        child: Text(
+          roleLabel(role),
+          style: TextStyle(
+            color: textColor,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ----------------------------------------------------------------------
+  // MAIN UI
+  // ----------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    String roleLabel(BattleRole r) {
-      switch (r) {
-        case BattleRole.listening:
-          return 'Listening';
-        case BattleRole.reading:
-          return 'Reading';
-        case BattleRole.writing:
-          return 'Writing';
-      }
-    }
-
-    Widget teamPanel(String title, {bool myTeam = false}) {
-      // giả lập dữ liệu
-      final players = myTeam
-          ? ['You', 'Teammate', null]
-          : ['Enemy 1', 'Enemy 2', 'Enemy 3'];
-      final roles = myTeam
-          ? [
-              _myRole == BattleRole.listening ? 'Listening' : null,
-              _takenMyTeam.contains(BattleRole.reading) ? 'Reading' : null,
-              _takenMyTeam.contains(BattleRole.writing) ? 'Writing' : null,
-            ]
-          : ['Listening', 'Reading', 'Writing'];
-
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF141428),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            for (int i = 0; i < 3; i++)
-              Container(
-                margin: const EdgeInsets.only(bottom: 6),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.black.withOpacity(0.15),
-                ),
-                child: Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 14,
-                      backgroundColor: Color(0xFF2B1640),
-                      child:
-                          Icon(Icons.person, size: 14, color: Colors.white70),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      players[i] ?? 'Empty slot',
-                      style: TextStyle(
-                        color: players[i] == null
-                            ? Colors.white30
-                            : Colors.white,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      roles[i] ?? '-',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      );
-    }
-
-    Widget roleChip(BattleRole role) {
-      final isSelected = _myRole == role;
-      final isTaken = _takenMyTeam.contains(role) && !isSelected;
-
-      final bg = isTaken
-          ? Colors.white12
-          : (isSelected ? theme.colorScheme.primary : const Color(0xFF2B1640));
-      final txt = isTaken
-          ? Colors.white38
-          : (isSelected ? Colors.black : Colors.white);
-
-      return GestureDetector(
-        onTap: isTaken ? null : () => _pickRole(role),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            color: bg,
-          ),
-          child: Text(
-            roleLabel(role),
-            style: TextStyle(color: txt, fontSize: 12),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: BBColors.darkBg,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: BBColors.darkBg,
         elevation: 0,
-        title: const Text('3v3 Lobby'),
         centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        title: const Text(
+          '3v3 Lobby',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
+          icon: const Icon(Icons.close_rounded, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
+
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                const Text(
-                  'Room code:',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+            // ROOM CODE -----------------------------------------------------
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1E1630), Color(0xFF141428)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  widget.roomCode.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.4,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: Row(
+                children: [
+                  const Text(
+                    'Room code:',
+                    style: TextStyle(color: Colors.white70, fontSize: 13),
                   ),
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.copy_rounded,
-                      size: 18, color: Colors.white60),
-                ),
-              ],
+                  const SizedBox(width: 6),
+                  Text(
+                    widget.roomCode.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.4,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.copy_rounded,
+                      size: 18,
+                      color: Colors.white60,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 10),
             const Text(
-              'Mỗi bên tối đa 3 người, mỗi người giữ một vai trò duy nhất.',
+              'Each team has 3 players and each role must be unique.',
               style: TextStyle(color: Colors.white54, fontSize: 11),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
 
+            // TEAMS PANEL ---------------------------------------------------
             Expanded(
               child: Row(
                 children: [
@@ -211,41 +300,42 @@ class _Battle3v3LobbyPageState extends State<Battle3v3LobbyPage> {
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 18),
 
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Your role: ${_myRole != null ? roleLabel(_myRole!) : 'None'}',
-                style:
-                    const TextStyle(color: Colors.white70, fontSize: 13),
-              ),
+            // ROLE PICK -----------------------------------------------------
+            Text(
+              'Your role: ${roleLabel(_myRole!)}',
+              style: const TextStyle(color: Colors.white70, fontSize: 13),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: BattleRole.values.map(roleChip).toList(),
+              children: BattleRole.values
+                  .map((r) => roleChip(r, theme))
+                  .toList(),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 22),
 
+            // BUTTONS -------------------------------------------------------
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       side: const BorderSide(color: Colors.white24),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(22),
                       ),
                     ),
-                    onPressed: () {
-                      // share code
-                    },
+                    onPressed: () {},
                     child: const Text(
                       'Share code',
-                      style: TextStyle(color: Colors.white70),
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
@@ -253,13 +343,13 @@ class _Battle3v3LobbyPageState extends State<Battle3v3LobbyPage> {
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: theme.colorScheme.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(22),
                       ),
                     ),
                     onPressed: () {
-                      // TODO: chỉ allow host + đủ role
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const BattlePlayPage(),
@@ -268,7 +358,10 @@ class _Battle3v3LobbyPageState extends State<Battle3v3LobbyPage> {
                     },
                     child: Text(
                       widget.isHost ? 'Start battle' : 'Ready',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

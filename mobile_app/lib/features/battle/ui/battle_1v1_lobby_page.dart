@@ -33,17 +33,13 @@ class Battle1v1LobbyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    Widget playerSlot(String name,
-        {bool me = false, bool waiting = false}) {
+    Widget playerSlot(String name, {bool me = false, bool waiting = false}) {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
           gradient: const LinearGradient(
-            colors: [
-              Color(0xFF151528),
-              Color(0xFF10101E),
-            ],
+            colors: [Color(0xFF151528), Color(0xFF10101E)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -85,24 +81,35 @@ class Battle1v1LobbyPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: BBColors.darkBg,
         elevation: 0,
-        title: const Text('1v1 Lobby'),
         centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        title: const Text(
+          '1v1 Lobby',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
+          icon: const Icon(Icons.close_rounded, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // room code card
+            // ---- ROOM CODE PANEL ----
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
-                color: const Color(0xFF141428),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1E1630), Color(0xFF141428)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                border: Border.all(color: Colors.white12, width: 1),
               ),
               child: Row(
                 children: [
@@ -111,10 +118,7 @@ class Battle1v1LobbyPage extends StatelessWidget {
                     children: [
                       const Text(
                         'Room code',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -142,14 +146,16 @@ class Battle1v1LobbyPage extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 10),
+
+            const SizedBox(height: 12),
             const Text(
               'Share this code so your opponent can join the duel.',
               style: TextStyle(color: Colors.white54, fontSize: 11),
             ),
-            const SizedBox(height: 18),
 
-            // players row
+            const SizedBox(height: 22),
+
+            // ---- PLAYER SLOT ----
             Row(
               children: [
                 Expanded(child: playerSlot('You', me: true)),
@@ -157,21 +163,20 @@ class Battle1v1LobbyPage extends StatelessWidget {
                 Expanded(child: playerSlot('', waiting: true)),
               ],
             ),
-            const SizedBox(height: 20),
 
-            // battle mode info
+            const SizedBox(height: 22),
+
+            // ---- BATTLE MODE PANEL ----
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
                 gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF1E1632),
-                    Color(0xFF151527),
-                  ],
+                  colors: [Color(0xFF1E1632), Color(0xFF151527)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
+                border: Border.all(color: Colors.white12),
               ),
               child: Row(
                 children: [
@@ -180,8 +185,7 @@ class Battle1v1LobbyPage extends StatelessWidget {
                     height: 34,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color:
-                          theme.colorScheme.primary.withOpacity(0.16),
+                      color: theme.colorScheme.primary.withOpacity(0.22),
                     ),
                     child: const Icon(
                       Icons.bolt_rounded,
@@ -189,7 +193,7 @@ class Battle1v1LobbyPage extends StatelessWidget {
                       size: 20,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,7 +207,7 @@ class Battle1v1LobbyPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         const Text(
-                          'Each duel has 10 questions. Scoring and timing are handled by the system.',
+                          'Each duel has 10 questions. Scoring and timing are handled automatically.',
                           style: TextStyle(
                             color: Colors.white60,
                             fontSize: 11,
@@ -212,37 +216,36 @@ class Battle1v1LobbyPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
+                  )
                 ],
               ),
             ),
 
             const Spacer(),
 
-            // bottom buttons
+            // ---- BUTTONS ----
             if (isHost)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(22),
                     ),
                   ),
                   onPressed: () {
-                    // TODO: only enable when 2 players are ready
                     Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const BattlePlayPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const BattlePlayPage()),
                     );
                   },
                   child: const Text(
-                    'Start battle',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    'Start duel',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               )
@@ -251,17 +254,13 @@ class Battle1v1LobbyPage extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 14),
-                    side:
-                        const BorderSide(color: Colors.white24, width: 1),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: Colors.white24, width: 1.2),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(22),
                     ),
                   ),
-                  onPressed: () {
-                    // TODO: toggle ready state
-                  },
+                  onPressed: () {},
                   child: const Text(
                     'Waiting for host…',
                     style: TextStyle(

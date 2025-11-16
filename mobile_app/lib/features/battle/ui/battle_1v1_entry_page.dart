@@ -38,6 +38,11 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
         backgroundColor: BBColors.darkBg,
         elevation: 0,
         centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(20),
+          ),
+        ),
         title: const Text(
           '1v1 Duel',
           style: TextStyle(fontWeight: FontWeight.w600),
@@ -47,48 +52,40 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
           onPressed: () => Navigator.of(context).pop(),
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
+          preferredSize: const Size.fromHeight(52),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             child: Container(
-              padding: const EdgeInsets.all(2),
+              height: 40,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF241837),
-                    Color(0xFF141424),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: const Color(0xFF141428),
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  color: const Color(0xFF0D0D18),
-                ),
-                child: TabBar(
-                  controller: _tab,
-                  indicator: BoxDecoration(
+              child: TabBar(
+                controller: _tab,
+                indicator: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
                     color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(999),
+                    width: 1.3,
                   ),
-                  labelColor: Colors.black,
-                  unselectedLabelColor: Colors.white70,
-                  labelStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  tabs: const [
-                    Tab(text: 'Create duel'),
-                    Tab(text: 'Join by code'),
-                  ],
                 ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                labelStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+                tabs: const [
+                  Tab(text: 'Create duel'),
+                  Tab(text: 'Join by code'),
+                ],
               ),
             ),
           ),
@@ -104,7 +101,7 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
     );
   }
 
-  // ---------- CREATE DUEL TAB ----------
+  // ------------------ CREATE DUEL TAB ------------------
 
   Widget _buildCreateTab(BuildContext context) {
     final theme = Theme.of(context);
@@ -152,7 +149,7 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
           ),
           child: Row(
             children: [
-              // left icon
+              // Icon
               Container(
                 width: 34,
                 height: 34,
@@ -169,7 +166,7 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
               ),
               const SizedBox(width: 12),
 
-              // text
+              // Texts
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,7 +192,6 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
 
               const SizedBox(width: 8),
 
-              // 10 questions
               const Text(
                 '10 questions',
                 style: TextStyle(
@@ -257,7 +253,7 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
                 backgroundColor: theme.colorScheme.primary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(22),
                 ),
               ),
               onPressed: () {
@@ -275,6 +271,7 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
               child: const Text(
                 'Create duel',
                 style: TextStyle(
+                  color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -285,7 +282,7 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
     );
   }
 
-  // ---------- JOIN BY CODE TAB ----------
+  // ------------------ JOIN BY CODE TAB ------------------
 
   Widget _buildJoinTab(BuildContext context) {
     final theme = Theme.of(context);
@@ -338,7 +335,7 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
                 backgroundColor: theme.colorScheme.primary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(22),
                 ),
               ),
               onPressed: () {
@@ -359,6 +356,7 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
                 'Join duel',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
+                  color: Colors.white70,
                 ),
               ),
             ),

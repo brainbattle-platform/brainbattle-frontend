@@ -34,26 +34,63 @@ class _Battle3v3EntryPageState extends State<Battle3v3EntryPage>
     return Scaffold(
       backgroundColor: BBColors.darkBg,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: BBColors.darkBg,
         elevation: 0,
-        title: const Text('3v3 Team Battle'),
         centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        title: const Text(
+          '3v3 Team Battle',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        bottom: TabBar(
-          controller: _tab,
-          indicatorColor: theme.colorScheme.primary,
-          indicatorWeight: 3,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white54,
-          tabs: const [
-            Tab(text: 'Create team'),
-            Tab(text: 'Join by code'),
-          ],
+
+        // ---- NEW TABBAR STYLE ----
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(52),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: Container(
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFF141428),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: TabBar(
+                controller: _tab,
+                indicator: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: theme.colorScheme.primary,
+                    width: 1.2,
+                  ),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                labelStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+                tabs: const [
+                  Tab(text: 'Create team'),
+                  Tab(text: 'Join by code'),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
+
       body: TabBarView(
         controller: _tab,
         children: [
@@ -64,28 +101,37 @@ class _Battle3v3EntryPageState extends State<Battle3v3EntryPage>
     );
   }
 
+  // ------------------------------------------------------------------------
+  // --------------------------- CREATE TEAM TAB -----------------------------
+  // ------------------------------------------------------------------------
+
   Widget _buildCreateTab(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Một trận 3v3 sẽ luôn có đủ 3 phần: Listening, Reading, Writing.\nMỗi người pick 1 vai trò duy nhất.',
-            style: TextStyle(color: Colors.white70, fontSize: 12),
+            'A 3v3 battle always includes all three skills: Listening, Reading, and Writing.\nEach player must pick exactly one unique role.',
+            style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.35),
           ),
+
           const Spacer(),
+
+          // ---- CREATE TEAM BUTTON ----
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                backgroundColor: theme.colorScheme.primary,
+                padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(22),
                 ),
               ),
               onPressed: () {
-                // TODO: tạo room 3v3
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const Battle3v3LobbyPage(
@@ -97,7 +143,10 @@ class _Battle3v3EntryPageState extends State<Battle3v3EntryPage>
               },
               child: const Text(
                 'Create team room',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -106,26 +155,33 @@ class _Battle3v3EntryPageState extends State<Battle3v3EntryPage>
     );
   }
 
+  // ------------------------------------------------------------------------
+  // ---------------------------- JOIN TEAM TAB -----------------------------
+  // ------------------------------------------------------------------------
+
   Widget _buildJoinTab(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Nhập mã phòng',
+            'Enter room code',
             style: TextStyle(
               color: Colors.white70,
               fontSize: 13,
             ),
           ),
           const SizedBox(height: 8),
+
           TextField(
             controller: _codeCtrl,
             style: const TextStyle(color: Colors.white),
             textCapitalization: TextCapitalization.characters,
             decoration: InputDecoration(
-              hintText: 'VD: TEAM1',
+              hintText: 'e.g. TEAM1',
               hintStyle: const TextStyle(color: Colors.white30),
               filled: true,
               fillColor: const Color(0xFF141428),
@@ -137,22 +193,28 @@ class _Battle3v3EntryPageState extends State<Battle3v3EntryPage>
                   const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
             ),
           ),
+
           const SizedBox(height: 8),
           const Text(
-            'Bạn sẽ được gán vào Team A hoặc Team B tùy theo slot trống.',
+            'You will automatically be placed in Team A or Team B depending on available slots.',
             style: TextStyle(
               color: Colors.white54,
               fontSize: 11,
+              height: 1.3,
             ),
           ),
+
           const Spacer(),
+
+          // ---- JOIN TEAM BUTTON ----
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                backgroundColor: theme.colorScheme.primary,
+                padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(22),
                 ),
               ),
               onPressed: () {
@@ -169,7 +231,10 @@ class _Battle3v3EntryPageState extends State<Battle3v3EntryPage>
               },
               child: const Text(
                 'Join team room',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
