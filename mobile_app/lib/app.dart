@@ -20,6 +20,9 @@ import 'features/community/ui/thread/thread_page.dart';
 import 'features/community/ui/clan/new_clan_page.dart';
 import 'features/shortvideo/shortvideo.dart';
 
+import 'features/battle/ui/battle_flow.dart';
+import 'features/battle/battle_routes.dart';
+
 class BrainBattleApp extends StatelessWidget {
   const BrainBattleApp({super.key});
 
@@ -39,6 +42,7 @@ class BrainBattleApp extends StatelessWidget {
         ThreadPage.routeName: (_) => const ThreadPage(),
         LessonsScreen.routeName: (_) => const LessonsScreen(),
         ShortVideoShell.routeName: (c) => const ShortVideoShell(),
+        BattleRoutes.root: (_) => const BattleFlow(),
         LoginPage.routeName: (_) => const LoginPage(),
         SignUpPage.routeName: (_) => const SignUpPage(),
         VerifyOtpPage.routeName: (ctx) {
