@@ -174,7 +174,7 @@ class _ChatsPageState extends State<ChatsPage> {
                 // Filter All / Unread / Groups
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
                     child: ThreadFilterBar(
                       value: _filter,
                       accent: _accent,
