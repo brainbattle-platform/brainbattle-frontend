@@ -31,6 +31,8 @@ export default function Header() {
 
   const isDashboard = pathname === "/admin";
   const isLearnerList = pathname === "/admin/users/learners";
+  const isCreatorPage = pathname === "/admin/users/creators";
+
 
   return (
     <header
@@ -102,19 +104,49 @@ export default function Header() {
         <button
           type="button"
           className="
-            inline-flex items-center gap-2 text-sm font-semibold
-            px-4 py-2 rounded-xl
-            bg-gradient-to-r from-rose-400 via-pink-500 to-purple-500
-            text-white shadow-sm
-            hover:opacity-90 transition
-          "
+    inline-flex items-center gap-2 text-sm font-semibold
+    px-4 py-2 rounded-xl
+    bg-gradient-to-r from-white via-pink-50 to-white
+    text-gray-800
+    border border-pink-200 shadow-sm
+    hover:bg-pink-50 hover:border-pink-300
+    active:opacity-80
+    transition
+  "
         >
-          <UserPlus className="w-4 h-4" />
-          Add Learner
+          <Download className="w-4 h-4 text-pink-500" />
+          Export CSV
         </button>
+
       )}
 
-      {!isDashboard && !isLearnerList && (
+      {isCreatorPage && (
+        <div className="flex items-center gap-3">
+
+          {/* Soft gradient button */}
+          <button
+            type="button"
+            className="
+        inline-flex items-center gap-2 text-sm font-semibold
+        px-4 py-2 rounded-xl
+        bg-gradient-to-r from-white via-pink-50 to-white
+        text-gray-800
+        border border-pink-200 shadow-sm
+        hover:bg-pink-50 hover:border-pink-300
+        active:opacity-80 transition
+      "
+          >
+            <UserPlus className="w-4 h-4 text-pink-500" />
+            Review pending
+          </button>
+
+          
+        </div>
+      )}
+
+
+
+      {!isDashboard && !isLearnerList && !isCreatorPage && (
         <div className="relative w-10 h-10 opacity-90">
           <Image
             src="/images/brainbattle_logo_really_pink.png"

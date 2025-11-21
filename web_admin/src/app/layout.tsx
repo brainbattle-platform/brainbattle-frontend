@@ -5,7 +5,7 @@ import "@/styles/globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Brain Battle Management",
+  title: "BrainBattle Management",
   description: "Brain Battle - Learning Language Management System",
 };
 
@@ -17,7 +17,6 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body className={inter.className}>
-        {/* Root chỉ bọc nền chung, không dính admin shell */}
         <div className="min-h-screen bg-white text-gray-900">
           {children}
         </div>
