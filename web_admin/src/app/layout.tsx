@@ -11,12 +11,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="vi">
+      <body className={inter.className}>
+        {/* Root chỉ bọc nền chung, không dính admin shell */}
+        <div className="min-h-screen bg-white text-gray-900">
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

@@ -4,3 +4,10 @@ export type User = {
   email: string;
   role: string;
 };
+
+export type MenuItem = {
+  label: string;
+  icon: React.ElementType;
+  href?: string;
+  children?: MenuItem[];
+};
