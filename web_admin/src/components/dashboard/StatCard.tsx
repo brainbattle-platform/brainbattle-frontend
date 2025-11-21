@@ -1,11 +1,13 @@
-import { LucideIcon } from 'lucide-react';
+"use client";
+
+import { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
   icon: LucideIcon;
   label: string;
   value: string;
-  change: string;
-  changeType: 'increase' | 'decrease';
+  change?: string;
+  changeType?: "increase" | "decrease";
 }
 
 export default function StatCard({
@@ -13,35 +15,52 @@ export default function StatCard({
   label,
   value,
   change,
-  changeType
+  changeType,
 }: StatCardProps) {
-  const isIncrease = changeType === 'increase';
+  const isUp = changeType === "increase";
 
   return (
     <div
-      className="p-4 rounded-xl space-y-2
-                 bg-white border border-gray-200 shadow-sm
-                 transition hover:shadow-md"
+      className="
+        w-full rounded-2xl
+        bg-white 
+        border border-black/5 
+        shadow-sm 
+        hover:shadow-md
+        transition-all
+        p-6
+        flex flex-col gap-4
+      "
     >
-      {/* Icon + Label */}
-      <div className="flex items-center gap-2 text-pink-600">
-        <Icon className="w-5 h-5" />
-        <span className="font-medium text-sm">{label}</span>
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] font-medium text-gray-600">{label}</span>
+
+        <div
+          className="
+            w-10 h-10 rounded-xl 
+            bg-gray-100 
+            flex items-center justify-center
+            text-gray-700
+          "
+        >
+          <Icon className="w-5 h-5" />
+        </div>
       </div>
 
-      {/* Value */}
-      <div className="text-3xl font-bold text-gray-900">{value}</div>
-
-      {/* Change */}
-      <div
-        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
-          ${isIncrease
-            ? 'bg-green-100 text-green-700'
-            : 'bg-red-100 text-red-600'
-          }`}
-      >
-        {isIncrease ? '▲' : '▼'} {change}
+      <div className="text-[28px] font-semibold text-gray-900 tracking-tight">
+        {value}
       </div>
+
+      {change && (
+        <div
+          className={`
+            inline-flex items-center px-2.5 py-1 rounded-md text-[12px] font-medium
+            ${isUp ? "text-green-600 bg-green-50" : "text-red-600 bg-red-50"}
+          `}
+        >
+          {isUp ? "↑" : "↓"} {change}
+        </div>
+      )}
     </div>
   );
 }
