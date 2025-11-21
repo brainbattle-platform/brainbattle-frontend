@@ -37,4 +37,20 @@ class ShortVideo {
         comments: comments ?? this.comments,
         liked: liked ?? this.liked,
       );
+    factory ShortVideo.fromJson(Map<String, dynamic> json) {
+    final idStr = json['id'].toString();
+    return ShortVideo(
+      id: idStr,
+      videoUrl: json['url'] ?? '',
+      thumbnailUrl:
+          'https://picsum.photos/seed/short$idStr/600/900', // fake thumb
+      author: json['author'] ?? 'Unknown',
+      caption: json['caption'] ?? '',
+      music: 'BrainBattle Mix',
+      likes: json['likes'] ?? 0,
+      comments: 0,
+      liked: false,
+    );
+  }
+
 }

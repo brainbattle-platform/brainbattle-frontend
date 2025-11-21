@@ -1,35 +1,25 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:mobile_app/core/api_config.dart';
+
 import 'lesson_model.dart';
 
 class LessonService {
-  Future<List<Lesson>> fetchLessons() async {
-    // Tạm fake dữ liệu, sau này thay bằng API
-    await Future.delayed(const Duration(milliseconds: 500));
+  // tạm mặc định skillId = 11 giống backend
+  Future<List<Lesson>> fetchLessons({int skillId = 11}) async {
+    final url =
+        Uri.parse('${ApiConfig.duoBaseUrl}/skills/$skillId/lessons');
 
-    return [
-      Lesson(
-        id: "1",
-        title: "Greetings",
-        description: "Learn how to say hello and goodbye",
-        level: "A1",
-        progress: 0.3,
-        status: LessonStatus.unlocked,   // 👈 thêm
-      ),
-      Lesson(
-        id: "2",
-        title: "Numbers & Colors",
-        description: "Practice numbers and basic colors",
-        level: "A1",
-        progress: 0.7,
-        status: LessonStatus.completed,  // 👈 thêm
-      ),
-      Lesson(
-        id: "3",
-        title: "Family & Friends",
-        description: "Introduce your family and friends",
-        level: "A2",
-        progress: 0.1,
-        status: LessonStatus.locked,     // 👈 thêm
-      ),
-    ];
+    final res = await http.get(url);
+
+    if (res.statusCode != 200) {
+      throw Exception(
+          'Failed to load lessons: ${res.statusCode} ${res.body}');
+    }
+
+    final data = jsonDecode(res.body) as List<dynamic>;
+    return data
+        .map((e) => Lesson.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }
