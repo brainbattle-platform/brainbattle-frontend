@@ -1,4 +1,3 @@
-// lesson_model.dart
 enum LessonStatus { locked, unlocked, completed }
 
 class Lesson {
@@ -6,8 +5,8 @@ class Lesson {
   final String title;
   final String description;
   final String level;
-  final double progress; // 0..1
-  final LessonStatus? status; // 👈 mới (có thể null)
+  final double progress;
+  final LessonStatus? status;
 
   Lesson({
     required this.id,
@@ -15,8 +14,37 @@ class Lesson {
     required this.description,
     required this.level,
     required this.progress,
-    this.status, // optional
+    this.status,
   });
 
-  // Nếu lấy từ JSON, nhớ map status (locked|unlocked|completed) → enum.
+  factory Lesson.fromJson(Map<String, dynamic> json) {
+    final statusStr = (json['status'] as String?) ?? 'unlocked';
+    LessonStatus? status;
+    switch (statusStr) {
+      case 'locked':
+        status = LessonStatus.locked;
+        break;
+      case 'available':
+      case 'unlocked':
+        status = LessonStatus.unlocked;
+        break;
+      case 'completed':
+        status = LessonStatus.completed;
+        break;
+      default:
+        status = null;
+    }
+
+    final progress =
+        status == LessonStatus.completed ? 1.0 : 0.0;
+
+    return Lesson(
+      id: json['id'].toString(),
+      title: json['title'] ?? '',
+      description: json['description'] ?? 'Demo lesson from API',
+      level: json['level'] ?? 'A1',
+      progress: progress,
+      status: status,
+    );
+  }
 }
