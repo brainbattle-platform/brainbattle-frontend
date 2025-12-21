@@ -87,14 +87,13 @@ class ShortsDiscoveryRepository {
       creatorCounts[video.author] = (creatorCounts[video.author] ?? 0) + 1;
     }
     final trendingCreators = creatorCounts.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value))
-      ..take(5)
-      ..map((e) => e.key);
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final creators = trendingCreators.take(5).map((e) => e.key).toList();
 
     return TrendingContent(
       hashtags: trendingHashtags.map((e) => e.key).toList(),
       sounds: trendingSounds,
-      creators: trendingCreators.toList(),
+      creators: creators,
     );
   }
 

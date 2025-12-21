@@ -4,7 +4,6 @@ import '../data/discovery_repository.dart';
 import '../shortvideo_routes.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/error_state.dart';
-import 'widgets/loading_skeleton.dart';
 
 class SearchResultsPage extends StatefulWidget {
   const SearchResultsPage({super.key});

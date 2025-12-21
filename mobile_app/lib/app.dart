@@ -44,6 +44,7 @@ import 'features/shortvideo/ui/upload_picker_page.dart';
 import 'features/shortvideo/ui/video_editor_page.dart';
 import 'features/shortvideo/ui/post_page.dart';
 import 'features/shortvideo/ui/inbox_page.dart';
+import 'features/shortvideo/ui/short_video_player_page.dart';
 
 import 'features/battle/ui/battle_flow.dart';
 import 'features/battle/battle_routes.dart';
@@ -103,6 +104,9 @@ class BrainBattleApp extends StatelessWidget {
           return PostPage(); // Will read args in didChangeDependencies
         },
         ShortVideoRoutes.inbox: (_) => const InboxPage(),
+        ShortVideoRoutes.player: (ctx) {
+          return ShortVideoPlayerPage(); // Will read args in didChangeDependencies
+        },
         // Learning routes
         LearningRoutes.practiceHub: (_) => const PracticeHubPage(),
         LearningRoutes.mistakesReview: (ctx) {

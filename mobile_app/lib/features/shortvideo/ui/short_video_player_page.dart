@@ -11,7 +11,6 @@ import '../core/mute_service.dart';
 import '../core/follow_service.dart';
 import '../core/save_service.dart';
 import '../core/video_controller_pool.dart';
-import '../data/local_shorts_store.dart';
 import '../shortvideo_routes.dart';
 import 'moderation_sheet.dart';
 
@@ -30,7 +29,6 @@ class _ShortVideoPlayerPageState extends State<ShortVideoPlayerPage> {
   final FollowService _followService = FollowService.instance;
   final SaveService _saveService = SaveService.instance;
   final VideoControllerPool _controllerPool = VideoControllerPool();
-  final LocalShortsStore _localStore = LocalShortsStore.instance;
 
   List<ShortVideo> _videos = [];
   int _currentIndex = 0;
@@ -101,10 +99,7 @@ class _ShortVideoPlayerPageState extends State<ShortVideoPlayerPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => ShareSheet(
-        videoId: v.id,
-        videoUrl: v.videoUrl,
-      ),
+      builder: (_) => ShareSheet(videoId: v.id, videoUrl: v.videoUrl),
     );
   }
 
@@ -135,10 +130,8 @@ class _ShortVideoPlayerPageState extends State<ShortVideoPlayerPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => ModerationSheet(
-        videoId: video.id,
-        creatorId: video.author,
-      ),
+      builder: (_) =>
+          ModerationSheet(videoId: video.id, creatorId: video.author),
     );
   }
 
@@ -196,8 +189,10 @@ class _ShortVideoPlayerPageState extends State<ShortVideoPlayerPage> {
                     thumbnail: item.thumbnailUrl,
                     muted: _muted,
                     onController: (c) async {
-                      final poolController = await _controllerPool.getController(item.videoUrl);
-                      if (poolController != null && poolController.value.isInitialized) {
+                      final poolController = await _controllerPool
+                          .getController(item.videoUrl);
+                      if (poolController != null &&
+                          poolController.value.isInitialized) {
                         poolController.setVolume(_muted ? 0.0 : 1.0);
                       }
                     },
@@ -238,7 +233,8 @@ class _ShortVideoPlayerPageState extends State<ShortVideoPlayerPage> {
                     right: 8,
                     bottom: 120,
                     child: RightRail(
-                      avatarUrl: 'https://i.pravatar.cc/150?img=${item.author.hashCode % 70}',
+                      avatarUrl:
+                          'https://i.pravatar.cc/150?img=${item.author.hashCode % 70}',
                       liked: item.liked,
                       likes: item.likes,
                       comments: item.comments,
@@ -279,7 +275,9 @@ class _ShortVideoPlayerPageState extends State<ShortVideoPlayerPage> {
                       child: SliderTheme(
                         data: SliderTheme.of(context).copyWith(
                           trackHeight: 2.5,
-                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 5,
+                          ),
                         ),
                         child: Slider(
                           min: 0,
@@ -317,4 +315,3 @@ class _ShortVideoPlayerPageState extends State<ShortVideoPlayerPage> {
     );
   }
 }
-

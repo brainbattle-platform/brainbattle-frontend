@@ -15,8 +15,6 @@ import '../core/save_service.dart';
 import '../core/video_controller_pool.dart';
 import '../data/local_shorts_store.dart';
 import '../shortvideo_routes.dart';
-import 'shorts_search_page.dart';
-import 'shorts_recorder_page.dart';
 
 class ShortVideoFeedPage extends StatefulWidget {
   const ShortVideoFeedPage({super.key});
@@ -62,23 +60,29 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
   Future<void> _toggleMute() async {
     final newMuted = await _muteService.toggle();
     setState(() => _muted = newMuted);
-    // Update current video volume
-    final controller = _controllers[_currentIndex];
-    if (controller != null && controller.value.isInitialized) {
-      await controller.setVolume(newMuted ? 0.0 : 1.0);
+    // Update current video volume via pool
+    if (_currentIndex < _items.length) {
+      final video = _items[_currentIndex];
+      final controller = await _controllerPool.getController(video.videoUrl);
+      if (controller != null) {
+        final isInitialized = controller.value.isInitialized;
+        if (isInitialized) {
+          await controller.setVolume(newMuted ? 0.0 : 1.0);
+        }
+      }
     }
   }
 
   Future<void> _load({bool append = true}) async {
     // Load from API
     final remoteData = await _svc.fetchFeed(page: _pageNum);
-    
+
     // Load from local store
     final localData = await _localStore.listFeedPosts();
-    
+
     // Merge: local first, then remote
     final allData = [...localData, ...remoteData];
-    
+
     setState(() {
       if (append) {
         _items.addAll(allData);
@@ -93,7 +97,7 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
 
   Future<void> _loadMoreIfNeeded(int index) async {
     setState(() => _currentIndex = index);
-    
+
     // Preload next video
     if (index < _items.length - 1) {
       final nextVideo = _items[index + 1];
@@ -118,6 +122,7 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
       );
     });
   }
+
   void _openComments(ShortVideo v, int index) async {
     await showModalBottomSheet(
       context: context,
@@ -142,10 +147,7 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => ShareSheet(
-        videoId: v.id,
-        videoUrl: v.videoUrl,
-      ),
+      builder: (_) => ShareSheet(videoId: v.id, videoUrl: v.videoUrl),
     );
   }
 
@@ -176,10 +178,8 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => ModerationSheet(
-        videoId: video.id,
-        creatorId: video.author,
-      ),
+      builder: (_) =>
+          ModerationSheet(videoId: video.id, creatorId: video.author),
     );
   }
 
@@ -257,11 +257,13 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
                       thumbnail: item.thumbnailUrl,
                       muted: _muted,
                       onController: (c) async {
-                        final poolController = await _controllerPool.getController(
-                          item.videoUrl,
-                          preload: index == _currentIndex + 1,
-                        );
-                        if (poolController != null && poolController.value.isInitialized) {
+                        final poolController = await _controllerPool
+                            .getController(
+                              item.videoUrl,
+                              preload: index == _currentIndex + 1,
+                            );
+                        if (poolController != null &&
+                            poolController.value.isInitialized) {
                           poolController.setVolume(_muted ? 0.0 : 1.0);
                         }
                       },
@@ -316,13 +318,18 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
                     left: 12,
                     top: 80,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.black.withOpacity(0.55),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Text('➕ Thêm bài của bạn',
-                          style: TextStyle(color: Colors.white)),
+                      child: const Text(
+                        '➕ Thêm bài của bạn',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
                   Positioned(
@@ -334,8 +341,10 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
                         color: Colors.redAccent,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text('Nhấp ngay\ncó thưởng',
-                          style: TextStyle(color: Colors.white)),
+                      child: const Text(
+                        'Nhấp ngay\ncó thưởng',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
 
@@ -344,7 +353,8 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
                     right: 8,
                     bottom: 120,
                     child: RightRail(
-                      avatarUrl: 'https://i.pravatar.cc/150?img=${item.author.hashCode % 70}',
+                      avatarUrl:
+                          'https://i.pravatar.cc/150?img=${item.author.hashCode % 70}',
                       liked: item.liked,
                       likes: item.likes,
                       comments: item.comments,
@@ -387,7 +397,9 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
                       child: SliderTheme(
                         data: SliderTheme.of(context).copyWith(
                           trackHeight: 2.5,
-                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 5,
+                          ),
                         ),
                         child: Slider(
                           min: 0,
@@ -411,14 +423,13 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
             bottom: 0,
             child: BottomShortsBar(
               inboxBadge: 8,
-                      onTap: (i) {
-                  if (i == 2) {
-                    Navigator.pushNamed(context, ShortVideoRoutes.upload);
-                  } else if (i == 3) {
-                    Navigator.pushNamed(context, ShortVideoRoutes.inbox);
-                  }
-                },
-
+              onTap: (i) {
+                if (i == 2) {
+                  Navigator.pushNamed(context, ShortVideoRoutes.upload);
+                } else if (i == 3) {
+                  Navigator.pushNamed(context, ShortVideoRoutes.inbox);
+                }
+              },
             ),
           ),
         ],

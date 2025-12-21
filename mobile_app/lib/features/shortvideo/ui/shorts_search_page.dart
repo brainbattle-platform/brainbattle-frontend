@@ -145,17 +145,20 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
                   ),
                   TextButton(
                     onPressed: () => _submit(_controller.text),
-                    child: const Text('Tìm kiếm',
-                        style: TextStyle(color: Color(0xFFFF2D55), fontWeight: FontWeight.w700)),
+                    child: const Text(
+                      'Tìm kiếm',
+                      style: TextStyle(
+                        color: Color(0xFFFF2D55),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
 
             // body
-            Expanded(
-              child: q.isEmpty ? _buildIdle() : _buildSuggest(q),
-            ),
+            Expanded(child: q.isEmpty ? _buildIdle() : _buildSuggest(q)),
           ],
         ),
       ),
@@ -177,8 +180,10 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
               child: Center(child: CircularProgressIndicator()),
             )
           else if (_trending != null) ...[
-            const Text('Đang thịnh hành',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+            const Text(
+              'Đang thịnh hành',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+            ),
             const SizedBox(height: 12),
             // Trending hashtags
             if (_trending!.hashtags.isNotEmpty) ...[
@@ -186,9 +191,8 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
                 spacing: 8,
                 runSpacing: 8,
                 children: _trending!.hashtags.map((tag) {
-                  return Chip(
+                  return ActionChip(
                     label: Text('#$tag'),
-                    onDeleted: () {},
                     onPressed: () => _submit('#$tag'),
                   );
                 }).toList(),
@@ -200,7 +204,10 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
               ..._trending!.sounds.map((sound) {
                 return _itemRow(
                   leading: const Icon(Icons.music_note, color: Colors.black54),
-                  title: Text(sound, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  title: Text(
+                    sound,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   subtitle: const Text('Âm thanh'),
                   trailing: const Icon(Icons.close, size: 18),
                   onTap: () {
@@ -216,8 +223,10 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
             ],
             // Trending creators
             if (_trending!.creators.isNotEmpty) ...[
-              const Text('Creators đang thịnh hành',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              const Text(
+                'Creators đang thịnh hành',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              ),
               const SizedBox(height: 8),
               ..._trending!.creators.map((creator) {
                 return _itemRow(
@@ -246,7 +255,8 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
           if (_history.length > 3)
             Center(
               child: TextButton(
-                onPressed: () => setState(() => _expandedHistory = !_expandedHistory),
+                onPressed: () =>
+                    setState(() => _expandedHistory = !_expandedHistory),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -324,7 +334,6 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
     );
   }
 
-
   Widget _itemRow({
     Widget? leading,
     required Widget title,
@@ -352,9 +361,21 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
     return RichText(
       text: TextSpan(
         children: [
-          TextSpan(text: a, style: const TextStyle(color: Colors.pink)),
-          TextSpan(text: b, style: const TextStyle(color: Colors.pink, fontWeight: FontWeight.w700)),
-          TextSpan(text: c, style: const TextStyle(color: Colors.pink)),
+          TextSpan(
+            text: a,
+            style: const TextStyle(color: Colors.pink),
+          ),
+          TextSpan(
+            text: b,
+            style: const TextStyle(
+              color: Colors.pink,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          TextSpan(
+            text: c,
+            style: const TextStyle(color: Colors.pink),
+          ),
         ],
       ),
     );
