@@ -1,6 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../../core/api_config.dart';
+import '../../../core/api_config.dart';
 import '../domain/exercise_model.dart';
 import '../domain/domain_model.dart';
 import 'unit_model.dart';
@@ -159,7 +160,4 @@ class LearningApiClient {
     return const Color(0xFFFFD166);
   }
 }
-
-// Import Color for parsing
-import 'package:flutter/material.dart';
 
