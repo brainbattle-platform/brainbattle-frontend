@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../battle_routes.dart';
 import '../../../core/theme/app_theme.dart';
 
 class BattleResultPage extends StatelessWidget {
@@ -45,14 +46,10 @@ class BattleResultPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             const SizedBox(height: 6),
             const Text(
               "Battle Summary",
-              style: TextStyle(
-                color: Colors.white54,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: Colors.white54, fontSize: 13),
             ),
 
             const SizedBox(height: 18),
@@ -74,8 +71,7 @@ class BattleResultPage extends StatelessWidget {
             _summaryCard(
               child: Row(
                 children: const [
-                  Icon(Icons.stars_rounded,
-                      color: Color(0xFFF3B4C3), size: 24),
+                  Icon(Icons.stars_rounded, color: Color(0xFFF3B4C3), size: 24),
                   SizedBox(width: 10),
                   Text(
                     "+120 XP",
@@ -85,8 +81,11 @@ class BattleResultPage extends StatelessWidget {
                     ),
                   ),
                   Spacer(),
-                  Icon(Icons.monetization_on_rounded,
-                      color: Color(0xFFFFEE58), size: 22),
+                  Icon(
+                    Icons.monetization_on_rounded,
+                    color: Color(0xFFFFEE58),
+                    size: 22,
+                  ),
                   SizedBox(width: 6),
                   Text(
                     "+30",
@@ -131,7 +130,9 @@ class BattleResultPage extends StatelessWidget {
                                 Text(
                                   "Q${index + 1}",
                                   style: const TextStyle(
-                                      color: Colors.white60, fontSize: 12),
+                                    color: Colors.white60,
+                                    fontSize: 12,
+                                  ),
                                 ),
                                 const SizedBox(width: 10),
 
@@ -142,8 +143,7 @@ class BattleResultPage extends StatelessWidget {
                                       value: correct ? 1 : 0.25,
                                       minHeight: 6,
                                       backgroundColor: Colors.white10,
-                                      valueColor:
-                                          AlwaysStoppedAnimation<Color>(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
                                         correct
                                             ? const Color(0xFF6CE5E8)
                                             : const Color(0xFFFF7D8C),
@@ -250,8 +250,10 @@ class BattleResultPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(color: Colors.white60, fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white60, fontSize: 12),
+        ),
         const SizedBox(height: 4),
         Text(
           score,
