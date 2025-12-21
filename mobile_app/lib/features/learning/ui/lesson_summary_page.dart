@@ -3,7 +3,6 @@ import '../../../core/theme/app_theme.dart';
 import '../data/lesson_model.dart';
 import '../domain/lesson_summary_model.dart';
 import '../learning_routes.dart';
-import 'unit_completion_page.dart';
 import 'mistakes_review_page.dart';
 
 class LessonSummaryPage extends StatelessWidget {
@@ -137,7 +136,7 @@ class LessonSummaryPage extends StatelessWidget {
                       ),
                     );
                   },
-                  icon: const Icon(Icons.review),
+                  icon: const Icon(Icons.rate_review),
                   label: const Text('Review Mistakes'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),

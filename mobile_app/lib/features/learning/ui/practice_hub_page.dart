@@ -3,7 +3,6 @@ import '../../../core/theme/app_theme.dart';
 import '../widgets/skill_planet.dart';
 import '../learning_routes.dart';
 import 'lesson_start_page.dart';
-import '../data/lesson_model.dart';
 import '../data/mock/mock_data.dart';
 
 class PracticeHubPage extends StatelessWidget {
