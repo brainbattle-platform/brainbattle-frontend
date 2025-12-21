@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../data/shortvideo_model.dart';
-import '../data/shortvideo_service.dart';
+import '../data/discovery_repository.dart';
 import '../shortvideo_routes.dart';
+import 'widgets/empty_state.dart';
+import 'widgets/error_state.dart';
+import 'widgets/loading_skeleton.dart';
 
 class SearchResultsPage extends StatefulWidget {
   const SearchResultsPage({super.key});
@@ -13,11 +16,12 @@ class SearchResultsPage extends StatefulWidget {
 }
 
 class _SearchResultsPageState extends State<SearchResultsPage> {
-  final ShortVideoService _service = ShortVideoService();
+  final ShortsDiscoveryRepository _discoveryRepo = ShortsDiscoveryRepository();
   String? _query;
   int _selectedTab = 0; // 0=Top, 1=Videos, 2=Users, 3=Hashtags
   bool _loading = true;
-  List<ShortVideo> _videos = [];
+  String? _errorMessage;
+  SearchResults? _results;
 
   @override
   void didChangeDependencies() {
@@ -28,19 +32,35 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   }
 
   Future<void> _loadResults() async {
-    setState(() => _loading = true);
-    // Mock: filter videos by query
-    final allVideos = await _service.fetchFeed(page: 1);
-    final filtered = _query!.isEmpty
-        ? allVideos
-        : allVideos.where((v) =>
-            v.caption.toLowerCase().contains(_query!.toLowerCase()) ||
-            v.author.toLowerCase().contains(_query!.toLowerCase())).toList();
-    
+    if (_query == null || _query!.isEmpty) {
+      setState(() {
+        _loading = false;
+        _errorMessage = 'Vui lòng nhập từ khóa tìm kiếm';
+      });
+      return;
+    }
+
     setState(() {
-      _videos = filtered;
-      _loading = false;
+      _loading = true;
+      _errorMessage = null;
     });
+
+    try {
+      final results = await _discoveryRepo.search(_query!);
+      if (mounted) {
+        setState(() {
+          _results = results;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Lỗi tìm kiếm: $e';
+          _loading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -73,7 +93,12 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
-                : _buildResults(),
+                : _errorMessage != null
+                    ? ShortsErrorState(
+                        message: _errorMessage!,
+                        onRetry: _loadResults,
+                      )
+                    : _buildResults(),
           ),
         ],
       ),

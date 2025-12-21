@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
 
 class ShareSheet extends StatelessWidget {
   final String videoId;
@@ -26,12 +28,41 @@ class ShareSheet extends StatelessWidget {
     }
   }
 
-  void _shareTo(BuildContext context, String platform) {
-    // TODO: Implement platform-specific sharing
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Chia sẻ đến $platform (stub)')),
-    );
-    Navigator.pop(context);
+  Future<void> _shareTo(BuildContext context) async {
+    try {
+      final link = 'https://brainbattle.app/shorts/$videoId';
+      await Share.share(link, subject: 'Xem video trên BrainBattle');
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi chia sẻ: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _shareFile(BuildContext context) async {
+    try {
+      final file = File(videoUrl);
+      if (await file.exists()) {
+        await Share.shareXFiles([XFile(file.path)], text: 'Video từ BrainBattle');
+        if (context.mounted) {
+          Navigator.pop(context);
+        }
+      } else {
+        // Fallback to link
+        await _shareTo(context);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi chia sẻ file: $e')),
+        );
+      }
+    }
   }
 
   void _report(BuildContext context) {
@@ -104,9 +135,15 @@ class ShareSheet extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.share, color: Colors.green),
-              title: const Text('Chia sẻ đến...'),
-              subtitle: const Text('Facebook, WhatsApp, v.v. (stub)'),
-              onTap: () => _shareTo(context, 'Social'),
+              title: const Text('Chia sẻ liên kết'),
+              subtitle: const Text('Facebook, WhatsApp, v.v.'),
+              onTap: () => _shareTo(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.video_file, color: Colors.blue),
+              title: const Text('Chia sẻ file video'),
+              subtitle: const Text('Gửi video trực tiếp'),
+              onTap: () => _shareFile(context),
             ),
             const Divider(height: 1),
             ListTile(

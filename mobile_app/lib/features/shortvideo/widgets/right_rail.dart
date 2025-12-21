@@ -27,7 +27,8 @@ class RightRail extends StatelessWidget {
   final VoidCallback onComment;
   final VoidCallback onSave;
   final VoidCallback onShare;
-  final VoidCallback? onFollow; // New: follow callback
+  final VoidCallback? onFollow;
+  final VoidCallback? onMore; // Moderation menu
 
   const RightRail({
     super.key,
@@ -43,9 +44,10 @@ class RightRail extends StatelessWidget {
     required this.onUploadTap,
     required this.onLike,
     required this.onComment,
-    required this.onSave,
+    required     this.onSave,
     required this.onShare,
     this.onFollow,
+    this.onMore,
   });
 
   @override
@@ -140,6 +142,15 @@ class RightRail extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+        ],
+        if (onMore != null) ...[
+          const SizedBox(height: 12),
+          IconButton(
+            onPressed: onMore,
+            icon: const Icon(Icons.more_vert),
+            color: color,
+            iconSize: 24,
           ),
         ],
       ],

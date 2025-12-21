@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/shortvideo_model.dart';
 import '../data/shortvideo_service.dart';
+import '../data/local_shorts_store.dart';
 import '../core/follow_service.dart';
 import '../shortvideo_routes.dart';
 
@@ -16,6 +17,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   final FollowService _followService = FollowService.instance;
   final ShortVideoService _videoService = ShortVideoService();
+  final LocalShortsStore _localStore = LocalShortsStore.instance;
   
   String? _userId;
   bool _following = false;
@@ -37,13 +39,19 @@ class _ProfilePageState extends State<ProfilePage> {
     // Load follow state
     final following = await _followService.isFollowing(_userId!);
     
-    // Load videos (mock - in real app, fetch user's videos)
+    // Load videos from local store first
+    final localVideos = await _localStore.listMyPosts(_userId!);
+    
+    // Also load from API
     final allVideos = await _videoService.fetchFeed(page: 1);
     final userVideos = allVideos.where((v) => v.author == _userId).toList();
     
+    // Merge: local first, then remote
+    final allUserVideos = [...localVideos, ...userVideos];
+    
     setState(() {
       _following = following;
-      _videos = userVideos.isEmpty ? allVideos.take(6).toList() : userVideos; // Fallback to demo
+      _videos = allUserVideos.isEmpty ? allVideos.take(6).toList() : allUserVideos;
       _loading = false;
     });
   }

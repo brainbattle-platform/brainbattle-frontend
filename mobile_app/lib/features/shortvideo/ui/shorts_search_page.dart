@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../data/shortvideo_service.dart';
-import '../data/shortvideo_model.dart';
 import '../data/search_service.dart';
+import '../data/discovery_repository.dart';
 import '../shortvideo_routes.dart';
 
 class ShortsSearchPage extends StatefulWidget {
@@ -15,19 +14,37 @@ class ShortsSearchPage extends StatefulWidget {
 class _ShortsSearchPageState extends State<ShortsSearchPage> {
   final _controller = TextEditingController();
   final _focus = FocusNode();
+  final _discoveryRepo = ShortsDiscoveryRepository();
 
   List<String> _history = [];
-  List<String> _recommend = [];
   List<String> _suggestions = [];
+  TrendingContent? _trending;
   bool _expandedHistory = false;
+  bool _loadingTrending = true;
   Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _history = ShortsSearchService.instance.getHistory();
-    _recommend = ShortsSearchService.instance.getRecommend();
     _focus.requestFocus();
+    _loadTrending();
+  }
+
+  Future<void> _loadTrending() async {
+    try {
+      final trending = await _discoveryRepo.trending();
+      if (mounted) {
+        setState(() {
+          _trending = trending;
+          _loadingTrending = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loadingTrending = false);
+      }
+    }
   }
 
   @override
@@ -40,8 +57,12 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
 
   void _onChanged(String q) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 180), () async {
-      final s = await ShortsSearchService.instance.getSuggestions(q);
+    _debounce = Timer(const Duration(milliseconds: 300), () async {
+      if (q.trim().isEmpty) {
+        setState(() => _suggestions = []);
+        return;
+      }
+      final s = await _discoveryRepo.suggestions(q);
       if (!mounted) return;
       setState(() => _suggestions = s);
     });
@@ -149,16 +170,76 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Dòng âm thanh (music)
-          _itemRow(
-            leading: const Icon(Icons.music_note, color: Colors.black54),
-            title: const Text('She Share Story (for Vlog) - 山口夕依',
-                style: TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: const Text('Âm thanh khác'),
-            trailing: const Icon(Icons.close, size: 18),
-            onTap: () {}, // mở trang âm thanh
-          ),
-          const SizedBox(height: 8),
+          // Trending section
+          if (_loadingTrending)
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_trending != null) ...[
+            const Text('Đang thịnh hành',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+            const SizedBox(height: 12),
+            // Trending hashtags
+            if (_trending!.hashtags.isNotEmpty) ...[
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _trending!.hashtags.map((tag) {
+                  return Chip(
+                    label: Text('#$tag'),
+                    onDeleted: () {},
+                    onPressed: () => _submit('#$tag'),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
+            ],
+            // Trending sounds
+            if (_trending!.sounds.isNotEmpty) ...[
+              ..._trending!.sounds.map((sound) {
+                return _itemRow(
+                  leading: const Icon(Icons.music_note, color: Colors.black54),
+                  title: Text(sound, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  subtitle: const Text('Âm thanh'),
+                  trailing: const Icon(Icons.close, size: 18),
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      ShortVideoRoutes.sound,
+                      arguments: {'soundName': sound},
+                    );
+                  },
+                );
+              }),
+              const SizedBox(height: 8),
+            ],
+            // Trending creators
+            if (_trending!.creators.isNotEmpty) ...[
+              const Text('Creators đang thịnh hành',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              const SizedBox(height: 8),
+              ..._trending!.creators.map((creator) {
+                return _itemRow(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(
+                      'https://i.pravatar.cc/150?img=${creator.hashCode % 70}',
+                    ),
+                  ),
+                  title: Text('@$creator'),
+                  subtitle: const Text('Creator'),
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      ShortVideoRoutes.profile,
+                      arguments: {'userId': creator},
+                    );
+                  },
+                );
+              }),
+              const SizedBox(height: 8),
+            ],
+          ],
 
           // Lịch sử
           ...visible.map((h) => _historyTile(h)).toList(),
@@ -201,23 +282,6 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
             ),
           ),
 
-          // Bạn có thể thích
-          Row(
-            children: [
-              const Text('Bạn có thể thích',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-              const Spacer(),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _recommend = ShortsSearchService.instance.refreshRecommend();
-                  });
-                },
-                child: const Text('Làm mới'),
-              ),
-            ],
-          ),
-          ..._recommend.map((s) => _recommendTile(s)),
           const SizedBox(height: 120),
         ],
       ),
@@ -260,20 +324,6 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
     );
   }
 
-  Widget _recommendTile(String s) {
-    return ListTile(
-      leading: const Icon(Icons.circle, size: 10, color: Color(0xFFE91E63)),
-      title: Text(s, style: const TextStyle(fontWeight: FontWeight.w600)),
-      onTap: () => _submit(s),
-      trailing: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.network(
-          'https://picsum.photos/seed/${s.hashCode}/64/64',
-          width: 42, height: 42, fit: BoxFit.cover,
-        ),
-      ),
-    );
-  }
 
   Widget _itemRow({
     Widget? leading,
