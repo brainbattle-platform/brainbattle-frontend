@@ -45,5 +45,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Permissions for ShortVideo -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ứng dụng cần truy cập thư viện ảnh để bạn có thể chọn video để đăng.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Ứng dụng cần truy cập camera để bạn có thể quay video.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Ứng dụng cần truy cập microphone để ghi âm khi quay video.</string>
 </dict>
 </plist>

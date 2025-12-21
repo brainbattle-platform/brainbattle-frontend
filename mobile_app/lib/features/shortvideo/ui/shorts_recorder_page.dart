@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart';
+import '../shortvideo_routes.dart';
 
 enum CaptureLength { s15, s60, m10 }
 enum CaptureMode { video, photo, text }
@@ -149,10 +150,13 @@ class _ShortsRecorderPageState extends State<ShortsRecorderPage> with WidgetsBin
       await File(file.path).copy(target);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Đã lưu clip tạm: $target')),
+      
+      // Navigate to editor
+      Navigator.pushNamed(
+        context,
+        ShortVideoRoutes.editor,
+        arguments: {'videoPath': target},
       );
-      // TODO: điều hướng sang trang preview/chỉnh sửa
     } catch (e) {
       setState(() => _recording = false);
     }

@@ -8,9 +8,12 @@ import '../widgets/bottom_bar.dart';
 import '../widgets/comment_sheet.dart';
 import '../widgets/share_sheet.dart';
 import '../widgets/caption_widget.dart';
+import 'moderation_sheet.dart';
 import '../core/mute_service.dart';
 import '../core/follow_service.dart';
 import '../core/save_service.dart';
+import '../core/video_controller_pool.dart';
+import '../data/local_shorts_store.dart';
 import '../shortvideo_routes.dart';
 import 'shorts_search_page.dart';
 import 'shorts_recorder_page.dart';
@@ -28,6 +31,8 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
   final MuteService _muteService = MuteService.instance;
   final FollowService _followService = FollowService.instance;
   final SaveService _saveService = SaveService.instance;
+  final VideoControllerPool _controllerPool = VideoControllerPool();
+  final LocalShortsStore _localStore = LocalShortsStore.instance;
 
   final List<ShortVideo> _items = [];
   bool _loading = true;
@@ -38,16 +43,15 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
   // controller + duration per index (để seek/progress)
   final Map<int, Duration> _durations = {};
   final Map<int, Duration> _positions = {};
-  final Map<int, VideoPlayerController?> _controllers = {}; // VideoPlayerController
   final Map<String, bool> _savedVideos = {}; // videoId -> saved
   final Map<String, bool> _followingUsers = {}; // userId -> following
-  final Map<int, bool> _expandedCaptions = {}; // index -> expanded
 
   @override
   void initState() {
     super.initState();
     _loadMuteState();
     _load();
+    _localStore.init(); // Initialize local store
   }
 
   Future<void> _loadMuteState() async {
@@ -66,14 +70,22 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
   }
 
   Future<void> _load({bool append = true}) async {
-    final data = await _svc.fetchFeed(page: _pageNum);
+    // Load from API
+    final remoteData = await _svc.fetchFeed(page: _pageNum);
+    
+    // Load from local store
+    final localData = await _localStore.listFeedPosts();
+    
+    // Merge: local first, then remote
+    final allData = [...localData, ...remoteData];
+    
     setState(() {
       if (append) {
-        _items.addAll(data);
+        _items.addAll(allData);
       } else {
         _items
           ..clear()
-          ..addAll(data);
+          ..addAll(allData);
       }
       _loading = false;
     });
@@ -82,14 +94,14 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
   Future<void> _loadMoreIfNeeded(int index) async {
     setState(() => _currentIndex = index);
     
-    // Cleanup controllers that are far away (keep current + next only)
-    _controllers.removeWhere((key, controller) {
-      if ((key - index).abs() > 2) {
-        controller?.dispose();
-        return true;
-      }
-      return false;
-    });
+    // Preload next video
+    if (index < _items.length - 1) {
+      final nextVideo = _items[index + 1];
+      _controllerPool.getController(nextVideo.videoUrl, preload: true);
+    }
+
+    // Cleanup idle controllers
+    _controllerPool.cleanupIdle();
 
     if (index >= _items.length - 2) {
       _pageNum += 1;
@@ -160,6 +172,17 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
     );
   }
 
+  void _showModerationSheet(ShortVideo video) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ModerationSheet(
+        videoId: video.id,
+        creatorId: video.author,
+      ),
+    );
+  }
+
   // void _showCommentsSheet(ShortVideo v) {
   //   showModalBottomSheet(
   //     context: context,
@@ -185,19 +208,17 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
   // }
 
   void _seekTo(int index, double valueSec) {
-    final c = _controllers[index];
-    if (c != null && c.value.isInitialized) {
-      c.seekTo(Duration(milliseconds: (valueSec * 1000).toInt()));
-    }
+    final video = _items[index];
+    _controllerPool.getController(video.videoUrl).then((controller) {
+      if (controller != null && controller.value.isInitialized) {
+        controller.seekTo(Duration(milliseconds: (valueSec * 1000).toInt()));
+      }
+    });
   }
 
   @override
   void dispose() {
-    // Dispose all controllers
-    for (final controller in _controllers.values) {
-      controller?.dispose();
-    }
-    _controllers.clear();
+    _controllerPool.disposeAll();
     _page.dispose();
     super.dispose();
   }
@@ -233,11 +254,11 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
                     url: item.videoUrl,
                     thumbnail: item.thumbnailUrl,
                     muted: _muted,
-                    onController: (c) {
-                      _controllers[index] = c;
-                      // Apply mute state immediately
-                      if (c.value.isInitialized) {
-                        c.setVolume(_muted ? 0.0 : 1.0);
+                    onController: (c) async {
+                      // Get from pool or create
+                      final poolController = await _controllerPool.getController(item.videoUrl);
+                      if (poolController != null && poolController.value.isInitialized) {
+                        poolController.setVolume(_muted ? 0.0 : 1.0);
                       }
                     },
                     onReady: (d) => setState(() => _durations[index] = d),
@@ -247,8 +268,9 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
                         // Error handled in player widget
                       }
                     },
-                    onRetry: () {
-                      // Retry will be handled by player
+                    onRetry: () async {
+                      // Retry: get new controller from pool
+                      await _controllerPool.getController(item.videoUrl);
                     },
                   ),
                   // Mute button (top-right)
@@ -332,16 +354,14 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
                       following: following,
                       onAvatarTap: () => _navigateToProfile(item.author),
                       onUploadTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ShortsRecorderPage()),
-                        );
+                        Navigator.pushNamed(context, ShortVideoRoutes.upload);
                       },
                       onLike: () => _toggleLike(index),
                       onComment: () => _openComments(item, index),
                       onSave: () => _toggleSave(index),
                       onShare: () => _openShareSheet(item),
                       onFollow: () => _toggleFollow(item.author),
+                      onMore: () => _showModerationSheet(item),
                     ),
                   ),
 
@@ -391,12 +411,11 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
             bottom: 0,
             child: BottomShortsBar(
               inboxBadge: 8,
-             onTap: (i) {
+                      onTap: (i) {
                   if (i == 2) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ShortsRecorderPage()),
-                    );
+                    Navigator.pushNamed(context, ShortVideoRoutes.upload);
+                  } else if (i == 3) {
+                    Navigator.pushNamed(context, ShortVideoRoutes.inbox);
                   }
                 },
 

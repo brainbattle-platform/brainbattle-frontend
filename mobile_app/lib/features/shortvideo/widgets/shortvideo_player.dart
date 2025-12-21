@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -14,6 +15,7 @@ class ShortVideoPlayer extends StatefulWidget {
   final ValueChanged<VideoPlayerController>? onController;
   final ValueChanged<Duration>? onProgress;
   final ValueChanged<bool>? onError; // Report errors
+  final VideoPlayerController? externalController; // Optional: use external pool controller
 
   const ShortVideoPlayer({
     super.key,
@@ -25,6 +27,7 @@ class ShortVideoPlayer extends StatefulWidget {
     this.onController,
     this.onProgress,
     this.onError,
+    this.externalController,
   });
 
   @override
@@ -44,7 +47,22 @@ class _ShortVideoPlayerState extends State<ShortVideoPlayer> {
   }
 
   Future<void> _initController() async {
-    if (_controller != null) {
+    // Use external controller if provided
+    if (widget.externalController != null) {
+      _controller = widget.externalController;
+      if (_controller!.value.isInitialized) {
+        await _controller!.setVolume(widget.muted ? 0.0 : 1.0);
+        widget.onController?.call(_controller!);
+        widget.onReady?.call(_controller!.value.duration);
+        _controller!.addListener(_onProgressUpdate);
+        setState(() {
+          _isInitializing = false;
+        });
+        return;
+      }
+    }
+
+    if (_controller != null && widget.externalController == null) {
       await _controller!.dispose();
     }
 
@@ -54,8 +72,16 @@ class _ShortVideoPlayerState extends State<ShortVideoPlayer> {
     });
 
     try {
-      _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
-        ..setLooping(true);
+      // Check if URL is file path (local) or network URL
+      final isLocalFile = !widget.url.startsWith('http://') && !widget.url.startsWith('https://');
+      
+      if (isLocalFile) {
+        _controller = VideoPlayerController.file(File(widget.url))
+          ..setLooping(true);
+      } else {
+        _controller = VideoPlayerController.networkUrl(Uri.parse(widget.url))
+          ..setLooping(true);
+      }
 
       await _controller!.initialize();
       

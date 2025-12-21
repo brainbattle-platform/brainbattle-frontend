@@ -40,6 +40,10 @@ import 'features/shortvideo/ui/profile_page.dart';
 import 'features/shortvideo/ui/search_results_page.dart';
 import 'features/shortvideo/ui/hashtag_page.dart';
 import 'features/shortvideo/ui/sound_page.dart';
+import 'features/shortvideo/ui/upload_picker_page.dart';
+import 'features/shortvideo/ui/video_editor_page.dart';
+import 'features/shortvideo/ui/post_page.dart';
+import 'features/shortvideo/ui/inbox_page.dart';
 
 import 'features/battle/ui/battle_flow.dart';
 import 'features/battle/battle_routes.dart';
@@ -91,6 +95,14 @@ class BrainBattleApp extends StatelessWidget {
         ShortVideoRoutes.sound: (ctx) {
           return SoundPage(); // Will read args in didChangeDependencies
         },
+        ShortVideoRoutes.upload: (_) => const UploadPickerPage(),
+        ShortVideoRoutes.editor: (ctx) {
+          return VideoEditorPage(); // Will read args in didChangeDependencies
+        },
+        ShortVideoRoutes.post: (ctx) {
+          return PostPage(); // Will read args in didChangeDependencies
+        },
+        ShortVideoRoutes.inbox: (_) => const InboxPage(),
         // Learning routes
         LearningRoutes.practiceHub: (_) => const PracticeHubPage(),
         LearningRoutes.mistakesReview: (ctx) {
