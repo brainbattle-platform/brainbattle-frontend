@@ -14,6 +14,7 @@ import 'widgets/exercise_templates/fill_blank_exercise.dart';
 import 'widgets/exercise_templates/matching_exercise.dart';
 import 'widgets/exercise_templates/listening_exercise.dart';
 import 'lesson_summary_page.dart';
+import '../domain/lesson_summary_model.dart';
 
 class ExercisePlayerPage extends StatefulWidget {
   final Lesson lesson;

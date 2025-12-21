@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/app_theme.dart';
+import '../../../../../../core/theme/app_theme.dart';
 import '../../../domain/exercise_model.dart';
 
 class MCQExercise extends StatefulWidget {
@@ -48,9 +48,7 @@ class _MCQExerciseState extends State<MCQExercise> {
         const SizedBox(height: 20),
 
         // Options
-        ...widget.exercise.options.asMap().entries.map((entry) {
-          final index = entry.key;
-          final option = entry.value;
+        ...widget.exercise.options.map((option) {
           final isSelected = _selectedAnswer == option;
 
           return Padding(
