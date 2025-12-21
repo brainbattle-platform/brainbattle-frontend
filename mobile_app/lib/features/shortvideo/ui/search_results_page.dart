@@ -4,7 +4,6 @@ import '../data/discovery_repository.dart';
 import '../shortvideo_routes.dart';
 import 'widgets/empty_state.dart';
 import 'widgets/error_state.dart';
-import 'widgets/loading_skeleton.dart';
 
 class SearchResultsPage extends StatefulWidget {
   const SearchResultsPage({super.key});
@@ -182,13 +181,17 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       title: Text(video.caption, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: Text('@${video.author} · ${video.likes} likes'),
       onTap: () {
+        // Get all videos for this search to allow swiping
+        final allVideos = _results!.videos;
+        final videoIndex = allVideos.indexOf(video);
         Navigator.pushNamed(
           context,
           ShortVideoRoutes.player,
           arguments: {
-            'videos': [video],
-            'initialIndex': 0,
+            'videos': allVideos,
+            'initialIndex': videoIndex >= 0 ? videoIndex : 0,
             'contextType': 'search',
+            'query': _query,
           },
         );
       },

@@ -20,7 +20,7 @@ class _HashtagPageState extends State<HashtagPage> {
   final ShortVideoService _service = ShortVideoService();
   final LocalShortsStore _localStore = LocalShortsStore.instance;
   final HashtagService _hashtagService = HashtagService.instance;
-  
+
   String? _tag;
   bool _loading = true;
   bool _following = false;
@@ -46,7 +46,7 @@ class _HashtagPageState extends State<HashtagPage> {
     try {
       // Load follow state
       final following = await _hashtagService.isFollowing(_tag!);
-      
+
       // Add to recent
       await _hashtagService.addRecent(_tag!);
 
@@ -57,8 +57,9 @@ class _HashtagPageState extends State<HashtagPage> {
 
       // Filter by hashtag
       final tagLower = '#$_tag'.toLowerCase();
-      final filtered = allVideos.where((v) =>
-          v.caption.toLowerCase().contains(tagLower)).toList();
+      final filtered = allVideos
+          .where((v) => v.caption.toLowerCase().contains(tagLower))
+          .toList();
 
       // Mock: split into top (by likes) and recent
       filtered.sort((a, b) => b.likes.compareTo(a.likes));
@@ -103,80 +104,79 @@ class _HashtagPageState extends State<HashtagPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-              ? ShortsErrorState(
-                  message: _errorMessage!,
-                  onRetry: _loadVideos,
-                )
-              : Column(
-                  children: [
-                    // Header
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          Text(
-                            '#$_tag',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              color: isDark ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${_topVideos.length + _recentVideos.length} videos',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: isDark ? Colors.white70 : Colors.black54,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _toggleFollow,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _following
-                                  ? Colors.transparent
-                                  : Colors.pinkAccent,
-                              foregroundColor: _following ? Colors.white : Colors.white,
-                              side: BorderSide(
-                                color: _following ? Colors.white : Colors.transparent,
-                              ),
-                            ),
-                            child: Text(_following ? 'Đã follow' : 'Follow'),
-                          ),
-                        ],
+          ? ShortsErrorState(message: _errorMessage!, onRetry: _loadVideos)
+          : Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Text(
+                        '#$_tag',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    // Tabs (if recent videos exist)
-                    if (_recentVideos.isNotEmpty)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _TabButton(
-                              label: 'Top',
-                              active: _selectedTab == 0,
-                              onTap: () => setState(() => _selectedTab = 0),
-                            ),
-                          ),
-                          Expanded(
-                            child: _TabButton(
-                              label: 'Recent',
-                              active: _selectedTab == 1,
-                              onTap: () => setState(() => _selectedTab = 1),
-                            ),
-                          ),
-                        ],
+                      const SizedBox(height: 8),
+                      Text(
+                        '${_topVideos.length + _recentVideos.length} videos',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
                       ),
-                    // Grid
-                    Expanded(
-                      child: _buildGrid(),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _toggleFollow,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _following
+                              ? Colors.transparent
+                              : Colors.pinkAccent,
+                          foregroundColor: _following
+                              ? Colors.white
+                              : Colors.white,
+                          side: BorderSide(
+                            color: _following
+                                ? Colors.white
+                                : Colors.transparent,
+                          ),
+                        ),
+                        child: Text(_following ? 'Đã follow' : 'Follow'),
+                      ),
+                    ],
+                  ),
                 ),
+                // Tabs (if recent videos exist)
+                if (_recentVideos.isNotEmpty)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _TabButton(
+                          label: 'Top',
+                          active: _selectedTab == 0,
+                          onTap: () => setState(() => _selectedTab = 0),
+                        ),
+                      ),
+                      Expanded(
+                        child: _TabButton(
+                          label: 'Recent',
+                          active: _selectedTab == 1,
+                          onTap: () => setState(() => _selectedTab = 1),
+                        ),
+                      ),
+                    ],
+                  ),
+                // Grid
+                Expanded(child: _buildGrid()),
+              ],
+            ),
     );
   }
 
   Widget _buildGrid() {
     final videos = _selectedTab == 0 ? _topVideos : _recentVideos;
-    
+
     if (videos.isEmpty) {
       return ShortsEmptyState(message: 'Không có video');
     }
@@ -204,47 +204,40 @@ class _HashtagPageState extends State<HashtagPage> {
               },
             );
           },
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.network(
-                              video.thumbnailUrl,
-                              fit: BoxFit.cover,
-                            ),
-                            const Positioned.fill(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [Colors.transparent, Colors.black54],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 4,
-                              left: 4,
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.play_arrow, size: 14, color: Colors.white),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${video.likes}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.network(video.thumbnailUrl, fit: BoxFit.cover),
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.transparent, Colors.black54],
+                    ),
                   ),
-                );
+                ),
+              ),
+              Positioned(
+                bottom: 4,
+                left: 4,
+                child: Row(
+                  children: [
+                    const Icon(Icons.play_arrow, size: 14, color: Colors.white),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${video.likes}',
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -280,7 +273,9 @@ class _TabButton extends StatelessWidget {
           label,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: active ? Colors.pinkAccent : (isDark ? Colors.white70 : Colors.black54),
+            color: active
+                ? Colors.pinkAccent
+                : (isDark ? Colors.white70 : Colors.black54),
             fontWeight: active ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
@@ -288,4 +283,3 @@ class _TabButton extends StatelessWidget {
     );
   }
 }
-
