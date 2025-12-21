@@ -35,6 +35,11 @@ import 'features/learning/ui/placement_test_page.dart';
 import 'features/community/ui/thread/thread_page.dart';
 import 'features/community/ui/clan/new_clan_page.dart';
 import 'features/shortvideo/shortvideo.dart';
+import 'features/shortvideo/shortvideo_routes.dart';
+import 'features/shortvideo/ui/profile_page.dart';
+import 'features/shortvideo/ui/search_results_page.dart';
+import 'features/shortvideo/ui/hashtag_page.dart';
+import 'features/shortvideo/ui/sound_page.dart';
 
 import 'features/battle/ui/battle_flow.dart';
 import 'features/battle/battle_routes.dart';
@@ -71,6 +76,21 @@ class BrainBattleApp extends StatelessWidget {
         ThreadPage.routeName: (_) => const ThreadPage(),
         LessonsScreen.routeName: (_) => const LessonsScreen(),
         ShortVideoShell.routeName: (c) => const ShortVideoShell(),
+        // ShortVideo routes
+        ShortVideoRoutes.profile: (ctx) {
+          final args = ModalRoute.of(ctx)?.settings.arguments as Map?;
+          return ProfilePage(); // Will read args in didChangeDependencies
+        },
+        ShortVideoRoutes.search: (_) => const ShortsSearchPage(),
+        ShortVideoRoutes.searchResults: (ctx) {
+          return SearchResultsPage(); // Will read args in didChangeDependencies
+        },
+        ShortVideoRoutes.hashtag: (ctx) {
+          return HashtagPage(); // Will read args in didChangeDependencies
+        },
+        ShortVideoRoutes.sound: (ctx) {
+          return SoundPage(); // Will read args in didChangeDependencies
+        },
         // Learning routes
         LearningRoutes.practiceHub: (_) => const PracticeHubPage(),
         LearningRoutes.mistakesReview: (ctx) {

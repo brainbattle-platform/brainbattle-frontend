@@ -4,6 +4,7 @@ import '../data/lesson_model.dart';
 import '../data/mock/mock_data.dart';
 import '../learning_routes.dart';
 import 'lesson_start_page.dart';
+import 'widgets/learning_empty_state.dart';
 
 class ReviewQueuePage extends StatefulWidget {
   const ReviewQueuePage({super.key});
@@ -34,27 +35,10 @@ class _ReviewQueuePageState extends State<ReviewQueuePage> {
         foregroundColor: isDark ? Colors.white : null,
       ),
       body: _reviewQueue.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.check_circle, size: 64, color: Colors.green),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No items to review',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Come back later for spaced repetition',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isDark ? Colors.white70 : Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
+          ? LearningEmptyState(
+              message: 'No items to review\nCome back later for spaced repetition',
+              actionLabel: 'Go Back',
+              onAction: () => Navigator.pop(context),
             )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),

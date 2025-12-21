@@ -5,16 +5,22 @@ import '../widgets/skill_planet.dart';
 import '../domain/exercise_model.dart';
 import '../domain/attempt_result_model.dart';
 import '../data/mock/mock_data.dart';
+import '../data/learning_repository.dart';
 import '../learning_routes.dart';
 import 'widgets/top_progress_header.dart';
 import 'widgets/bottom_feedback_bar.dart';
 import 'widgets/explanation_drawer.dart';
+import 'widgets/learning_error_state.dart';
+import 'widgets/learning_empty_state.dart';
 import 'widgets/exercise_templates/mcq_exercise.dart';
 import 'widgets/exercise_templates/fill_blank_exercise.dart';
 import 'widgets/exercise_templates/matching_exercise.dart';
 import 'widgets/exercise_templates/listening_exercise.dart';
 import 'lesson_summary_page.dart';
 import '../domain/lesson_summary_model.dart';
+import '../core/hearts_service.dart';
+import 'widgets/out_of_hearts_dialog.dart';
+import 'package:flutter/services.dart';
 
 class ExercisePlayerPage extends StatefulWidget {
   final Lesson lesson;
@@ -27,6 +33,7 @@ class ExercisePlayerPage extends StatefulWidget {
   });
 
   static const routeName = LearningRoutes.exercisePlayer;
+  static const keyExercisePlayer = Key('exercise_player_page');
 
   @override
   State<ExercisePlayerPage> createState() => _ExercisePlayerPageState();
@@ -38,19 +45,89 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
   final Map<String, AttemptResult> _attempts = {};
   FeedbackType _feedback = FeedbackType.none;
   bool _showExplanation = false;
-  DateTime? _startTime;
+  DateTime? _lessonStartTime;
+  final Map<String, DateTime> _exerciseStartTimes = {};
+  int _currentLives = 5;
+  int _maxLives = 5;
+  final HeartsService _heartsService = HeartsService.instance;
+  final LearningRepository _repository = LearningRepository();
+  bool _loadingExercises = false;
+  String? _errorMessage;
+  bool _usingOfflineData = false;
 
   @override
   void initState() {
     super.initState();
-    _exercises = MockLearningData.exercisesForLesson(widget.lesson.id);
-    _startTime = DateTime.now();
+    _exercises = [];
+    _lessonStartTime = DateTime.now();
+    _loadHearts();
+    _loadExercises();
   }
 
-  void _handleAnswer(String answer) {
+  Future<void> _loadExercises() async {
+    setState(() {
+      _loadingExercises = true;
+      _errorMessage = null;
+      _usingOfflineData = false;
+    });
+    try {
+      final items = await _repository.getItems(lessonId: widget.lesson.id);
+      setState(() {
+        _exercises = items;
+        _loadingExercises = false;
+        if (_exercises.isNotEmpty) {
+          _exerciseStartTimes[_exercises[0].id] = DateTime.now();
+        }
+      });
+    } catch (e) {
+      // Fallback to mock
+      debugPrint('API failed, using mock data: $e');
+      setState(() {
+        _exercises = MockLearningData.exercisesForLesson(widget.lesson.id);
+        _loadingExercises = false;
+        _usingOfflineData = true;
+        if (_exercises.isNotEmpty) {
+          _exerciseStartTimes[_exercises[0].id] = DateTime.now();
+        }
+      });
+    }
+  }
+
+  Future<void> _loadHearts() async {
+    final current = await _heartsService.getCurrentLives();
+    final max = await _heartsService.getMaxLives();
+    setState(() {
+      _currentLives = current;
+      _maxLives = max;
+    });
+  }
+
+  Future<void> _handleAnswer(String answer) async {
     final exercise = _exercises[_currentIndex];
     final isCorrect = answer.trim().toLowerCase() ==
         exercise.correctAnswer.trim().toLowerCase();
+
+    // Calculate time spent on this exercise
+    final exerciseStart = _exerciseStartTimes[exercise.id] ?? DateTime.now();
+    final timeSpent = DateTime.now().difference(exerciseStart).inSeconds;
+
+    // Haptic feedback
+    if (isCorrect) {
+      HapticFeedback.lightImpact();
+    } else {
+      HapticFeedback.mediumImpact();
+      // Consume heart on wrong answer
+      final newLives = await _heartsService.consumeHeart();
+      setState(() => _currentLives = newLives);
+      
+      // Check if out of hearts
+      if (newLives == 0) {
+        final timeUntilRefill = await _heartsService.getTimeUntilNextRefill();
+        if (mounted) {
+          await OutOfHeartsDialog.show(context, timeUntilNextRefill: timeUntilRefill);
+        }
+      }
+    }
 
     setState(() {
       _feedback = isCorrect ? FeedbackType.correct : FeedbackType.wrong;
@@ -58,7 +135,7 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
         exerciseId: exercise.id,
         userAnswer: answer,
         isCorrect: isCorrect,
-        timeSpent: 0, // TODO: calculate from start
+        timeSpent: timeSpent,
         attemptedAt: DateTime.now(),
       );
     });
@@ -70,10 +147,13 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
         _currentIndex++;
         _feedback = FeedbackType.none;
         _showExplanation = false;
+        // Track start time for next exercise
+        final nextExercise = _exercises[_currentIndex];
+        _exerciseStartTimes[nextExercise.id] = DateTime.now();
       });
     } else {
       // Go to summary
-      final totalTime = DateTime.now().difference(_startTime!).inSeconds;
+      final totalTime = DateTime.now().difference(_lessonStartTime!).inSeconds;
       final correctCount = _attempts.values.where((a) => a.isCorrect).length;
       final wrongCount = _attempts.values.where((a) => !a.isCorrect).length;
       final mistakeIds = _attempts.entries
@@ -110,22 +190,23 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
       case ExerciseType.mcq:
         return MCQExercise(
           exercise: exercise,
-          onAnswer: _handleAnswer,
+          onAnswer: (answer) => _handleAnswer(answer),
         );
       case ExerciseType.fill:
         return FillBlankExercise(
           exercise: exercise,
-          onAnswer: _handleAnswer,
+          onAnswer: (answer) => _handleAnswer(answer),
         );
       case ExerciseType.match:
         return MatchingExercise(
           exercise: exercise,
-          onAnswer: _handleAnswer,
+          onAnswer: (answer) => _handleAnswer(answer),
         );
       case ExerciseType.listen:
         return ListeningExercise(
+          key: ValueKey(exercise.id), // Force rebuild when exercise changes
           exercise: exercise,
-          onAnswer: _handleAnswer,
+          onAnswer: (answer) => _handleAnswer(answer),
         );
     }
   }
@@ -134,16 +215,78 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    if (_loadingExercises) {
+      return Scaffold(
+        backgroundColor: isDark ? BBColors.darkBg : null,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null && _exercises.isEmpty) {
+      return Scaffold(
+        backgroundColor: isDark ? BBColors.darkBg : null,
+        appBar: AppBar(
+          title: Text(widget.lesson.title),
+          backgroundColor: Colors.transparent,
+          foregroundColor: isDark ? Colors.white : null,
+        ),
+        body: LearningErrorState(
+          message: 'Failed to load exercises',
+          onRetry: _loadExercises,
+        ),
+      );
+    }
+
+    if (_exercises.isEmpty) {
+      return Scaffold(
+        backgroundColor: isDark ? BBColors.darkBg : null,
+        appBar: AppBar(
+          title: Text(widget.lesson.title),
+          backgroundColor: Colors.transparent,
+          foregroundColor: isDark ? Colors.white : null,
+        ),
+        body: LearningEmptyState(
+          message: 'No exercises available',
+          actionLabel: 'Go Back',
+          onAction: () => Navigator.pop(context),
+        ),
+      );
+    }
+
     final exercise = _exercises[_currentIndex];
 
     return Scaffold(
+      key: ExercisePlayerPage.keyExercisePlayer,
       backgroundColor: isDark ? BBColors.darkBg : null,
       body: Column(
         children: [
+          if (_usingOfflineData)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.orange.withOpacity(0.1),
+              child: Row(
+                children: [
+                  const Icon(Icons.wifi_off, size: 16, color: Colors.orange),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Using offline data',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.orange,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           TopProgressHeader(
             currentIndex: _currentIndex,
             totalCount: _exercises.length,
             onClose: () => Navigator.pop(context),
+            currentLives: _currentLives,
+            maxLives: _maxLives,
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -224,7 +367,12 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
             ),
           BottomFeedbackBar(
             type: _feedback,
-            onContinue: _feedback != FeedbackType.none ? _nextQuestion : null,
+            onContinue: _feedback != FeedbackType.none
+                ? () {
+                    HapticFeedback.selectionClick();
+                    _nextQuestion();
+                  }
+                : null,
           ),
         ],
       ),

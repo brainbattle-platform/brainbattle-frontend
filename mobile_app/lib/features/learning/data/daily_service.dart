@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/streak_freeze_service.dart';
 
 class DailyMission {
   final String title;
@@ -38,15 +39,23 @@ class DailyService {
         lastDate.month == today.month &&
         lastDate.day == today.day;
 
-    // Nếu qua ngày nhưng không hoàn thành hôm qua -> reset streak
+    // Nếu qua ngày nhưng không hoàn thành hôm qua -> check streak freeze
     if (lastDate != null) {
       final yesterday = today.subtract(const Duration(days: 1));
       final didYesterday = lastDate.year == yesterday.year &&
           lastDate.month == yesterday.month &&
           lastDate.day == yesterday.day;
       if (!didYesterday && !completedToday && lastDate.isBefore(yesterday)) {
-        streak = 0;
-        await prefs.setInt(_kStreak, streak);
+        // Check if user has streak freeze
+        final freezeService = StreakFreezeService.instance;
+        final shouldConsume = await freezeService.shouldConsumeFreeze();
+        if (!shouldConsume) {
+          streak = 0;
+          await prefs.setInt(_kStreak, streak);
+        } else {
+          // Freeze was consumed, keep streak
+          await freezeService.setLastStreakDate(lastDate);
+        }
       }
     }
 

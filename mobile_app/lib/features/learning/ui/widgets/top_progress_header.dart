@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_theme.dart';
+import 'hearts_indicator.dart';
 
 class TopProgressHeader extends StatelessWidget {
   final int currentIndex;
   final int totalCount;
   final VoidCallback? onClose;
+  final int? currentLives;
+  final int? maxLives;
 
   const TopProgressHeader({
     super.key,
     required this.currentIndex,
     required this.totalCount,
     this.onClose,
+    this.currentLives,
+    this.maxLives,
   });
 
   @override
@@ -36,6 +41,14 @@ class TopProgressHeader extends StatelessWidget {
               icon: const Icon(Icons.close),
               onPressed: onClose,
               color: isDark ? Colors.white70 : Colors.black54,
+            ),
+          if (currentLives != null && maxLives != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: HeartsIndicator(
+                currentLives: currentLives!,
+                maxLives: maxLives!,
+              ),
             ),
           Expanded(
             child: Column(

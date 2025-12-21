@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../data/shortvideo_service.dart'; // chỉ để lấy demo list nếu muốn
-import '../data/shortvideo_model.dart';   // không bắt buộc
-
-import '../data/search_service.dart';     // ở mục 2 bên dưới
+import '../data/shortvideo_service.dart';
+import '../data/shortvideo_model.dart';
+import '../data/search_service.dart';
+import '../shortvideo_routes.dart';
 
 class ShortsSearchPage extends StatefulWidget {
   const ShortsSearchPage({super.key});
@@ -54,8 +54,12 @@ class _ShortsSearchPageState extends State<ShortsSearchPage> {
     setState(() {
       _history = ShortsSearchService.instance.getHistory();
     });
-    // TODO: điều hướng đến trang kết quả tìm kiếm
-    Navigator.pop(context, query);
+    // Navigate to search results
+    Navigator.pushNamed(
+      context,
+      ShortVideoRoutes.searchResults,
+      arguments: {'query': query},
+    );
   }
 
   @override

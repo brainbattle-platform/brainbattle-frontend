@@ -19,12 +19,15 @@ class RightRail extends StatelessWidget {
   final int comments;
   final int saves;
   final int shares;
+  final bool saved; // New: saved state
+  final bool following; // New: following state
   final VoidCallback onAvatarTap;
   final VoidCallback onUploadTap;
   final VoidCallback onLike;
   final VoidCallback onComment;
   final VoidCallback onSave;
   final VoidCallback onShare;
+  final VoidCallback? onFollow; // New: follow callback
 
   const RightRail({
     super.key,
@@ -34,12 +37,15 @@ class RightRail extends StatelessWidget {
     required this.comments,
     required this.saves,
     required this.shares,
+    this.saved = false,
+    this.following = false,
     required this.onAvatarTap,
     required this.onUploadTap,
     required this.onLike,
     required this.onComment,
     required this.onSave,
     required this.onShare,
+    this.onFollow,
   });
 
   @override
@@ -96,8 +102,8 @@ class RightRail extends StatelessWidget {
         // Save
         IconButton(
           onPressed: onSave,
-          icon: const Icon(Icons.bookmark_border),
-          color: color,
+          icon: Icon(saved ? Icons.bookmark : Icons.bookmark_border),
+          color: saved ? Colors.yellowAccent : color,
           iconSize: 30,
         ),
         Text(_abbrVi(saves), style: const TextStyle(color: color)),
@@ -110,6 +116,32 @@ class RightRail extends StatelessWidget {
           iconSize: 30,
         ),
         Text(_abbrVi(shares), style: const TextStyle(color: color)),
+        if (onFollow != null) ...[
+          const SizedBox(height: 12),
+          // Follow button
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: following ? Colors.transparent : Colors.pinkAccent,
+              border: Border.all(
+                color: following ? Colors.white : Colors.transparent,
+                width: 1.5,
+              ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: GestureDetector(
+              onTap: onFollow,
+              child: Text(
+                following ? 'Đã follow' : 'Follow',
+                style: TextStyle(
+                  color: following ? color : Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
