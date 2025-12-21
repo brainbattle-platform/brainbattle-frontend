@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../learning_routes.dart';
 import '../practice_hub_page.dart';
 
 class OutOfHeartsDialog extends StatelessWidget {
   final int timeUntilNextRefill; // seconds
+
+  static const keyOutOfHeartsDialog = Key('out_of_hearts_dialog');
 
   const OutOfHeartsDialog({
     super.key,
@@ -34,6 +35,7 @@ class OutOfHeartsDialog extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return AlertDialog(
+      key: OutOfHeartsDialog.keyOutOfHeartsDialog,
       backgroundColor: isDark ? BBColors.darkCard : Colors.white,
       title: Row(
         children: [

@@ -6,6 +6,11 @@ import '../data/unit_service.dart';
 import '../data/unit_model.dart';
 import '../data/lesson_model.dart';
 import '../data/lesson_service.dart';
+import '../data/learning_repository.dart';
+import '../core/unlock_service.dart';
+import 'widgets/learning_loading_skeleton.dart';
+import 'widgets/learning_empty_state.dart';
+import 'widgets/learning_error_state.dart';
 
 import '../widgets/starfield.dart';
 import '../widgets/orbit_ring.dart';
@@ -18,15 +23,22 @@ import 'unit_detail_page.dart';
 
 class GalaxyMapScreen extends StatefulWidget {
   const GalaxyMapScreen({super.key});
+
+  static const keyGalaxyMap = Key('galaxy_map_screen');
+
   @override
   State<GalaxyMapScreen> createState() => _GalaxyMapScreenState();
 }
 
 class _GalaxyMapScreenState extends State<GalaxyMapScreen> {
   final _svc = UnitService();
+  final _repository = LearningRepository();
+  final _unlockService = UnlockService.instance;
   final _scroll = ScrollController();
   List<Unit> _units = [];
   bool _loading = true;
+  String? _error;
+  bool _usingOfflineData = false;
 
   @override
   void initState() {
@@ -35,11 +47,39 @@ class _GalaxyMapScreenState extends State<GalaxyMapScreen> {
   }
 
   Future<void> _load() async {
-    final units = await _svc.fetchUnits();
     setState(() {
-      _units = units;
-      _loading = false;
+      _loading = true;
+      _error = null;
+      _usingOfflineData = false;
     });
+
+    try {
+      // Try repository first (with API fallback)
+      final units = await _repository.getUnits(domainId: 'english');
+      // Apply unlock logic based on placement
+      final unlockedUnits = await _unlockService.applyUnlockLogic(units);
+      setState(() {
+        _units = unlockedUnits;
+        _loading = false;
+      });
+    } catch (e) {
+      // Fallback to UnitService (mock)
+      try {
+        final units = await _svc.fetchUnits();
+        // Apply unlock logic based on placement
+        final unlockedUnits = await _unlockService.applyUnlockLogic(units);
+        setState(() {
+          _units = unlockedUnits;
+          _loading = false;
+          _usingOfflineData = true;
+        });
+      } catch (fallbackError) {
+        setState(() {
+          _error = 'Failed to load units: ${fallbackError.toString()}';
+          _loading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -52,6 +92,7 @@ class _GalaxyMapScreenState extends State<GalaxyMapScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
+      key: GalaxyMapScreen.keyGalaxyMap,
       backgroundColor: isDark ? const Color(0xFF0B1020) : null,
       appBar: AppBar(
         title: const Text("Galaxy Map"),
@@ -61,21 +102,61 @@ class _GalaxyMapScreenState extends State<GalaxyMapScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : Stack(
-              children: [
-                const Positioned.fill(child: Starfield(count: 160)),
-                ListView.builder(
-                  controller: _scroll,
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(vertical: 48),
-                  itemCount: _units.length,
-                  itemBuilder: (context, i) {
-                    final alignLeft = i.isEven; // zích zắc trái/phải
-                    return _UnitSystemStrip(unit: _units[i], alignLeft: alignLeft);
-                  },
-                ),
-              ],
-            ),
+          : _error != null
+              ? LearningErrorState(
+                  message: _error!,
+                  onRetry: _load,
+                )
+              : _units.isEmpty
+                  ? LearningEmptyState(
+                      message: 'No units available',
+                      actionLabel: 'Retry',
+                      onAction: _load,
+                    )
+                  : Stack(
+                      children: [
+                        const Positioned.fill(child: Starfield(count: 160)),
+                        Column(
+                          children: [
+                            if (_usingOfflineData)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                color: Colors.orange.withOpacity(0.1),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.wifi_off, size: 16, color: Colors.orange),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Using offline data',
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          color: Colors.orange,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            Expanded(
+                              child: ListView.builder(
+                                controller: _scroll,
+                                physics: const BouncingScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(vertical: 48),
+                                itemCount: _units.length,
+                                itemBuilder: (context, i) {
+                                  final alignLeft = i.isEven;
+                                  return _UnitSystemStrip(unit: _units[i], alignLeft: alignLeft);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
     );
   }
 }

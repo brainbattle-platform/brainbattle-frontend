@@ -17,6 +17,7 @@ class LessonStartPage extends StatelessWidget {
   });
 
   static const routeName = LearningRoutes.lessonStart;
+  static const keyLessonStart = Key('lesson_start_page');
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +28,7 @@ class LessonStartPage extends StatelessWidget {
     final estimatedXP = exercises.length * 10; // 10 XP per exercise
 
     return Scaffold(
+      key: LessonStartPage.keyLessonStart,
       backgroundColor: isDark ? BBColors.darkBg : null,
       appBar: AppBar(
         title: Text(lesson.title),

@@ -16,6 +16,7 @@ class LessonSummaryPage extends StatelessWidget {
   });
 
   static const routeName = LearningRoutes.lessonSummary;
+  static const keyLessonSummary = Key('lesson_summary_page');
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +24,7 @@ class LessonSummaryPage extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      key: LessonSummaryPage.keyLessonSummary,
       backgroundColor: isDark ? BBColors.darkBg : null,
       appBar: AppBar(
         title: const Text('Lesson Complete'),

@@ -16,6 +16,8 @@ class StreakPage extends StatefulWidget {
 class _StreakPageState extends State<StreakPage> {
   int _streak = 0;
   bool _loading = true;
+  int _freezeCount = 0;
+  final StreakFreezeService _freezeService = StreakFreezeService.instance;
 
   @override
   void initState() {
@@ -25,8 +27,10 @@ class _StreakPageState extends State<StreakPage> {
 
   Future<void> _loadStreak() async {
     final mission = await DailyService.instance.fetchToday();
+    final freezes = await _freezeService.getFreezeCount();
     setState(() {
       _streak = mission.streak;
+      _freezeCount = freezes;
       _loading = false;
     });
   }
@@ -155,68 +159,6 @@ class _StreakPageState extends State<StreakPage> {
                 ],
               ),
             ),
-    );
-  }
-
-  void _showFreezeDialog(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? BBColors.darkCard : Colors.white,
-        title: const Text('Streak Freeze'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'You have $_freezeCount streak freeze(s) available.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: isDark ? Colors.white70 : Colors.black54,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Streak freeze protects your streak if you miss a day.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isDark ? Colors.white70 : Colors.black54,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          if (_freezeCount > 0)
-            ElevatedButton(
-              onPressed: () {
-                // Freeze is automatically consumed when needed
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Freeze will be used automatically if needed')),
-                );
-              },
-              child: const Text('Use'),
-            ),
-          OutlinedButton(
-            onPressed: () {
-              // TODO: Implement purchase flow
-              _freezeService.addFreezes(1).then((_) {
-                _loadStreak();
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Purchase stub: +1 freeze')),
-                );
-              });
-            },
-            child: const Text('Buy (stub)'),
-          ),
-        ],
-      ),
     );
   }
 

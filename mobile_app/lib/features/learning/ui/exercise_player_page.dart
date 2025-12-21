@@ -5,10 +5,13 @@ import '../widgets/skill_planet.dart';
 import '../domain/exercise_model.dart';
 import '../domain/attempt_result_model.dart';
 import '../data/mock/mock_data.dart';
+import '../data/learning_repository.dart';
 import '../learning_routes.dart';
 import 'widgets/top_progress_header.dart';
 import 'widgets/bottom_feedback_bar.dart';
 import 'widgets/explanation_drawer.dart';
+import 'widgets/learning_error_state.dart';
+import 'widgets/learning_empty_state.dart';
 import 'widgets/exercise_templates/mcq_exercise.dart';
 import 'widgets/exercise_templates/fill_blank_exercise.dart';
 import 'widgets/exercise_templates/matching_exercise.dart';
@@ -30,6 +33,7 @@ class ExercisePlayerPage extends StatefulWidget {
   });
 
   static const routeName = LearningRoutes.exercisePlayer;
+  static const keyExercisePlayer = Key('exercise_player_page');
 
   @override
   State<ExercisePlayerPage> createState() => _ExercisePlayerPageState();
@@ -48,6 +52,8 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
   final HeartsService _heartsService = HeartsService.instance;
   final LearningRepository _repository = LearningRepository();
   bool _loadingExercises = false;
+  String? _errorMessage;
+  bool _usingOfflineData = false;
 
   @override
   void initState() {
@@ -59,7 +65,11 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
   }
 
   Future<void> _loadExercises() async {
-    setState(() => _loadingExercises = true);
+    setState(() {
+      _loadingExercises = true;
+      _errorMessage = null;
+      _usingOfflineData = false;
+    });
     try {
       final items = await _repository.getItems(lessonId: widget.lesson.id);
       setState(() {
@@ -71,9 +81,11 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
       });
     } catch (e) {
       // Fallback to mock
+      debugPrint('API failed, using mock data: $e');
       setState(() {
         _exercises = MockLearningData.exercisesForLesson(widget.lesson.id);
         _loadingExercises = false;
+        _usingOfflineData = true;
         if (_exercises.isNotEmpty) {
           _exerciseStartTimes[_exercises[0].id] = DateTime.now();
         }
@@ -192,6 +204,7 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
         );
       case ExerciseType.listen:
         return ListeningExercise(
+          key: ValueKey(exercise.id), // Force rebuild when exercise changes
           exercise: exercise,
           onAnswer: (answer) => _handleAnswer(answer),
         );
@@ -203,19 +216,71 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    if (_loadingExercises || _exercises.isEmpty) {
+    if (_loadingExercises) {
       return Scaffold(
         backgroundColor: isDark ? BBColors.darkBg : null,
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
+    if (_errorMessage != null && _exercises.isEmpty) {
+      return Scaffold(
+        backgroundColor: isDark ? BBColors.darkBg : null,
+        appBar: AppBar(
+          title: Text(widget.lesson.title),
+          backgroundColor: Colors.transparent,
+          foregroundColor: isDark ? Colors.white : null,
+        ),
+        body: LearningErrorState(
+          message: 'Failed to load exercises',
+          onRetry: _loadExercises,
+        ),
+      );
+    }
+
+    if (_exercises.isEmpty) {
+      return Scaffold(
+        backgroundColor: isDark ? BBColors.darkBg : null,
+        appBar: AppBar(
+          title: Text(widget.lesson.title),
+          backgroundColor: Colors.transparent,
+          foregroundColor: isDark ? Colors.white : null,
+        ),
+        body: LearningEmptyState(
+          message: 'No exercises available',
+          actionLabel: 'Go Back',
+          onAction: () => Navigator.pop(context),
+        ),
+      );
+    }
+
     final exercise = _exercises[_currentIndex];
 
     return Scaffold(
+      key: ExercisePlayerPage.keyExercisePlayer,
       backgroundColor: isDark ? BBColors.darkBg : null,
       body: Column(
         children: [
+          if (_usingOfflineData)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.orange.withOpacity(0.1),
+              child: Row(
+                children: [
+                  const Icon(Icons.wifi_off, size: 16, color: Colors.orange),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Using offline data',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.orange,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           TopProgressHeader(
             currentIndex: _currentIndex,
             totalCount: _exercises.length,

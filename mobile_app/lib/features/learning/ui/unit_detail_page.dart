@@ -5,8 +5,11 @@ import '../data/lesson_model.dart';
 import '../widgets/skill_planet.dart';
 import '../learning_routes.dart';
 import 'lesson_start_page.dart';
+import 'widgets/learning_loading_skeleton.dart';
+import 'widgets/learning_empty_state.dart';
+import 'widgets/learning_error_state.dart';
 
-class UnitDetailPage extends StatelessWidget {
+class UnitDetailPage extends StatefulWidget {
   final Unit unit;
 
   const UnitDetailPage({
@@ -15,16 +18,88 @@ class UnitDetailPage extends StatelessWidget {
   });
 
   static const routeName = LearningRoutes.unitDetail;
+  static const keyUnitDetail = Key('unit_detail_page');
+
+  @override
+  State<UnitDetailPage> createState() => _UnitDetailPageState();
+}
+
+class _UnitDetailPageState extends State<UnitDetailPage> {
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    // Unit is passed in, but we can add loading/error for lessons if needed
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    if (_loading) {
+      return Scaffold(
+        backgroundColor: isDark ? BBColors.darkBg : null,
+        appBar: AppBar(
+          title: Text(widget.unit.title),
+          backgroundColor: Colors.transparent,
+          foregroundColor: isDark ? Colors.white : null,
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: LearningLoadingSkeleton(itemCount: 3),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return Scaffold(
+        backgroundColor: isDark ? BBColors.darkBg : null,
+        appBar: AppBar(
+          title: Text(widget.unit.title),
+          backgroundColor: Colors.transparent,
+          foregroundColor: isDark ? Colors.white : null,
+        ),
+        body: LearningErrorState(
+          message: _error!,
+          onRetry: () {
+            setState(() {
+              _error = null;
+              _loading = true;
+            });
+            // Retry logic here
+            Future.delayed(const Duration(seconds: 1), () {
+              if (mounted) {
+                setState(() => _loading = false);
+              }
+            });
+          },
+        ),
+      );
+    }
+
+    if (widget.unit.lessons.isEmpty) {
+      return Scaffold(
+        backgroundColor: isDark ? BBColors.darkBg : null,
+        appBar: AppBar(
+          title: Text(widget.unit.title),
+          backgroundColor: Colors.transparent,
+          foregroundColor: isDark ? Colors.white : null,
+        ),
+        body: LearningEmptyState(
+          message: 'No lessons available in this unit',
+          actionLabel: 'Go Back',
+          onAction: () => Navigator.pop(context),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: isDark ? BBColors.darkBg : null,
-      appBar: AppBar(
-        title: Text(unit.title),
+        appBar: AppBar(
+          title: Text(widget.unit.title),
         backgroundColor: Colors.transparent,
         foregroundColor: isDark ? Colors.white : null,
       ),
@@ -37,22 +112,22 @@ class UnitDetailPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                  gradient: LinearGradient(
                   colors: [
-                    unit.color.withOpacity(0.2),
-                    unit.color.withOpacity(0.1),
+                    widget.unit.color.withOpacity(0.2),
+                    widget.unit.color.withOpacity(0.1),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: unit.color.withOpacity(0.3)),
+                border: Border.all(color: widget.unit.color.withOpacity(0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    unit.title,
+                    widget.unit.title,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       color: isDark ? Colors.white : Colors.black87,
                       fontWeight: FontWeight.bold,
@@ -89,10 +164,10 @@ class UnitDetailPage extends StatelessWidget {
                       height: 56,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: unit.color.withOpacity(0.2),
-                        border: Border.all(color: unit.color.withOpacity(0.5)),
+                        color: widget.unit.color.withOpacity(0.2),
+                        border: Border.all(color: widget.unit.color.withOpacity(0.5)),
                       ),
-                      child: Icon(skill.icon, color: unit.color),
+                      child: Icon(skill.icon, color: widget.unit.color),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -117,9 +192,9 @@ class UnitDetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            ...unit.lessons.map((lesson) => _LessonTile(
+            ...widget.unit.lessons.map((lesson) => _LessonTile(
               lesson: lesson,
-              unitColor: unit.color,
+              unitColor: widget.unit.color,
               onTap: () {
                 Navigator.push(
                   context,
@@ -146,6 +221,8 @@ class _LessonTile extends StatelessWidget {
     required this.unitColor,
     required this.onTap,
   });
+
+  @override
 
   @override
   Widget build(BuildContext context) {
