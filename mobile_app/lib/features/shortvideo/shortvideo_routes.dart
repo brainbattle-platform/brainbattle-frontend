@@ -10,5 +10,6 @@ class ShortVideoRoutes {
   static const String upload = '/shorts/upload';
   static const String editor = '/shorts/editor';
   static const String post = '/shorts/post';
+  static const String player = '/shorts/player'; // Generic player page
 }
 

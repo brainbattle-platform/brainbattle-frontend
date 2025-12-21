@@ -106,8 +106,13 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   }
 
   Widget _buildResults() {
+    if (_results == null) {
+      return ShortsEmptyState(message: 'Không có kết quả');
+    }
+
     switch (_selectedTab) {
       case 0:
+        return _buildTopResults();
       case 1:
         return _buildVideosList();
       case 2:
@@ -119,21 +124,71 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     }
   }
 
+  Widget _buildTopResults() {
+    // Top = mix of videos, users, hashtags
+    return ListView(
+      children: [
+        if (_results!.videos.isNotEmpty) ...[
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Videos', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          ..._results!.videos.take(3).map((video) => _videoTile(video)),
+        ],
+        if (_results!.users.isNotEmpty) ...[
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Users', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          ..._results!.users.take(3).map((user) => _userTile(user)),
+        ],
+        if (_results!.hashtags.isNotEmpty) ...[
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('Hashtags', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ),
+          ..._results!.hashtags.take(3).map((tag) => _hashtagTile(tag)),
+        ],
+        if (_results!.videos.isEmpty && _results!.users.isEmpty && _results!.hashtags.isEmpty)
+          ShortsEmptyState(message: 'Không tìm thấy kết quả cho "$_query"'),
+      ],
+    );
+  }
+
   Widget _buildVideosList() {
-    if (_videos.isEmpty) {
-      return const Center(child: Text('Không tìm thấy video'));
+    if (_results!.videos.isEmpty) {
+      return ShortsEmptyState(message: 'Không tìm thấy video');
     }
     return ListView.builder(
-      itemCount: _videos.length,
-      itemBuilder: (context, index) {
-        final video = _videos[index];
-        return ListTile(
-          leading: Image.network(video.thumbnailUrl, width: 80, height: 80, fit: BoxFit.cover),
-          title: Text(video.caption, maxLines: 2, overflow: TextOverflow.ellipsis),
-          subtitle: Text('@${video.author} · ${video.likes} likes'),
-          onTap: () {
-            // TODO: Navigate to video in feed
-            Navigator.pop(context);
+      itemCount: _results!.videos.length,
+      itemBuilder: (context, index) => _videoTile(_results!.videos[index]),
+    );
+  }
+
+  Widget _videoTile(ShortVideo video) {
+    return ListTile(
+      leading: Image.network(
+        video.thumbnailUrl,
+        width: 80,
+        height: 80,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Container(
+          width: 80,
+          height: 80,
+          color: Colors.grey[300],
+          child: const Icon(Icons.video_library),
+        ),
+      ),
+      title: Text(video.caption, maxLines: 2, overflow: TextOverflow.ellipsis),
+      subtitle: Text('@${video.author} · ${video.likes} likes'),
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          ShortVideoRoutes.player,
+          arguments: {
+            'videos': [video],
+            'initialIndex': 0,
+            'contextType': 'search',
           },
         );
       },
@@ -141,48 +196,52 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   }
 
   Widget _buildUsersList() {
-    // Mock users
-    final users = ['user1', 'user2', 'user3'];
+    if (_results!.users.isEmpty) {
+      return ShortsEmptyState(message: 'Không tìm thấy người dùng');
+    }
     return ListView.builder(
-      itemCount: users.length,
-      itemBuilder: (context, index) {
-        final user = users[index];
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=${user.hashCode % 70}'),
-          ),
-          title: Text('@$user'),
-          subtitle: const Text('Creator'),
-          onTap: () {
-            Navigator.pushNamed(
-              context,
-              ShortVideoRoutes.profile,
-              arguments: {'userId': user},
-            );
-          },
+      itemCount: _results!.users.length,
+      itemBuilder: (context, index) => _userTile(_results!.users[index]),
+    );
+  }
+
+  Widget _userTile(String user) {
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=${user.hashCode % 70}'),
+      ),
+      title: Text('@$user'),
+      subtitle: const Text('Creator'),
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          ShortVideoRoutes.profile,
+          arguments: {'userId': user},
         );
       },
     );
   }
 
   Widget _buildHashtagsList() {
-    // Mock hashtags
-    final hashtags = ['#trending', '#viral', '#funny'];
+    if (_results!.hashtags.isEmpty) {
+      return ShortsEmptyState(message: 'Không tìm thấy hashtag');
+    }
     return ListView.builder(
-      itemCount: hashtags.length,
-      itemBuilder: (context, index) {
-        final tag = hashtags[index];
-        return ListTile(
-          leading: const Icon(Icons.tag),
-          title: Text(tag),
-          subtitle: const Text('123 videos'),
-          onTap: () {
-            Navigator.pushNamed(
-              context,
-              ShortVideoRoutes.hashtag,
-              arguments: {'tag': tag.substring(1)},
-            );
-          },
+      itemCount: _results!.hashtags.length,
+      itemBuilder: (context, index) => _hashtagTile(_results!.hashtags[index]),
+    );
+  }
+
+  Widget _hashtagTile(String tag) {
+    return ListTile(
+      leading: const Icon(Icons.tag),
+      title: Text('#$tag'),
+      subtitle: const Text('123 videos'), // Mock count
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          ShortVideoRoutes.hashtag,
+          arguments: {'tag': tag},
         );
       },
     );
