@@ -14,6 +14,7 @@ import '../widgets/planet_fx.dart';
 import '../widgets/lesson_card.dart';
 
 import 'lesson_detail_screen.dart';
+import 'unit_detail_page.dart';
 
 class GalaxyMapScreen extends StatefulWidget {
   const GalaxyMapScreen({super.key});
@@ -122,10 +123,20 @@ class _UnitSystemStripState extends State<_UnitSystemStrip> with TickerProviderS
           children: [
             Align(
               alignment: widget.alignLeft ? Alignment.topLeft : Alignment.topRight,
-              child: Chip(
-                label: Text(widget.unit.title, style: const TextStyle(color: Colors.white)),
-                backgroundColor: widget.unit.color.withOpacity(0.18),
-                side: BorderSide(color: widget.unit.color.withOpacity(0.5)),
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => UnitDetailPage(unit: widget.unit),
+                    ),
+                  );
+                },
+                child: Chip(
+                  label: Text(widget.unit.title, style: const TextStyle(color: Colors.white)),
+                  backgroundColor: widget.unit.color.withOpacity(0.18),
+                  side: BorderSide(color: widget.unit.color.withOpacity(0.5)),
+                ),
               ),
             ),
             Align(

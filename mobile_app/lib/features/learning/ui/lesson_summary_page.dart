@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_theme.dart';
+import '../../../core/theme/app_theme.dart';
 import '../data/lesson_model.dart';
 import '../domain/lesson_summary_model.dart';
 import '../learning_routes.dart';

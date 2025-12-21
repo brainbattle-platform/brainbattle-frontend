@@ -14,6 +14,23 @@ import 'features/auth/forgot/forgot_new_password_page.dart';
 import 'package:mobile_app/core/network/api_base.dart';
 
 import 'features/learning/learning.dart';
+import 'features/learning/learning_routes.dart';
+import 'features/learning/ui/unit_detail_page.dart';
+import 'features/learning/ui/lesson_start_page.dart';
+import 'features/learning/ui/exercise_player_page.dart';
+import 'features/learning/ui/lesson_summary_page.dart';
+import 'features/learning/ui/unit_completion_page.dart';
+import 'features/learning/ui/practice_hub_page.dart';
+import 'features/learning/ui/mistakes_review_page.dart';
+import 'features/learning/ui/review_queue_page.dart';
+import 'features/learning/ui/daily_goal_picker_page.dart';
+import 'features/learning/ui/streak_page.dart';
+import 'features/learning/ui/league_page.dart';
+import 'features/learning/ui/achievements_page.dart';
+import 'features/learning/ui/learning_stats_page.dart';
+import 'features/learning/ui/learning_settings_page.dart';
+import 'features/learning/ui/curriculum_browser_page.dart';
+import 'features/learning/ui/placement_test_page.dart';
 
 import 'features/community/ui/thread/thread_page.dart';
 import 'features/community/ui/clan/new_clan_page.dart';
@@ -54,6 +71,24 @@ class BrainBattleApp extends StatelessWidget {
         ThreadPage.routeName: (_) => const ThreadPage(),
         LessonsScreen.routeName: (_) => const LessonsScreen(),
         ShortVideoShell.routeName: (c) => const ShortVideoShell(),
+        // Learning routes
+        LearningRoutes.practiceHub: (_) => const PracticeHubPage(),
+        LearningRoutes.mistakesReview: (ctx) {
+          final args = ModalRoute.of(ctx)?.settings.arguments as Map?;
+          return MistakesReviewPage(
+            lesson: args?['lesson'] as Lesson,
+            mistakeIds: (args?['mistakeIds'] as List?)?.cast<String>() ?? [],
+          );
+        },
+        LearningRoutes.reviewQueue: (_) => const ReviewQueuePage(),
+        LearningRoutes.dailyGoalPicker: (_) => const DailyGoalPickerPage(),
+        LearningRoutes.streak: (_) => const StreakPage(),
+        LearningRoutes.league: (_) => const LeaguePage(),
+        LearningRoutes.achievements: (_) => const AchievementsPage(),
+        LearningRoutes.learningStats: (_) => const LearningStatsPage(),
+        LearningRoutes.learningSettings: (_) => const LearningSettingsPage(),
+        LearningRoutes.curriculumBrowser: (_) => const CurriculumBrowserPage(),
+        LearningRoutes.placementTest: (_) => const PlacementTestPage(),
         BattleRoutes.root: (_) => const BattleFlow(),
         LoginPage.routeName: (_) => const LoginPage(),
         SignUpPage.routeName: (_) => const SignUpPage(),
