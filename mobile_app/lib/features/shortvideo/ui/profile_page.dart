@@ -155,8 +155,16 @@ class _ProfilePageState extends State<ProfilePage> {
                       final video = _videos[index];
                       return GestureDetector(
                         onTap: () {
-                          // TODO: Navigate to feed at this video
-                          Navigator.pop(context);
+                          Navigator.pushNamed(
+                            context,
+                            ShortVideoRoutes.player,
+                            arguments: {
+                              'videos': _videos,
+                              'initialIndex': index,
+                              'contextType': 'profile',
+                              'userId': _userId,
+                            },
+                          );
                         },
                         child: Stack(
                           fit: StackFit.expand,
