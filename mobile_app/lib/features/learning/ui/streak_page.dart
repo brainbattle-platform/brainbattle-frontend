@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../data/daily_service.dart';
 import '../learning_routes.dart';
+import '../core/streak_freeze_service.dart';
 
 class StreakPage extends StatefulWidget {
   const StreakPage({super.key});

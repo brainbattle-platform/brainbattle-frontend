@@ -68,7 +68,7 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
     });
   }
 
-  void _handleAnswer(String answer) {
+  Future<void> _handleAnswer(String answer) async {
     final exercise = _exercises[_currentIndex];
     final isCorrect = answer.trim().toLowerCase() ==
         exercise.correctAnswer.trim().toLowerCase();
@@ -76,6 +76,24 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
     // Calculate time spent on this exercise
     final exerciseStart = _exerciseStartTimes[exercise.id] ?? DateTime.now();
     final timeSpent = DateTime.now().difference(exerciseStart).inSeconds;
+
+    // Haptic feedback
+    if (isCorrect) {
+      HapticFeedback.lightImpact();
+    } else {
+      HapticFeedback.mediumImpact();
+      // Consume heart on wrong answer
+      final newLives = await _heartsService.consumeHeart();
+      setState(() => _currentLives = newLives);
+      
+      // Check if out of hearts
+      if (newLives == 0) {
+        final timeUntilRefill = await _heartsService.getTimeUntilNextRefill();
+        if (mounted) {
+          await OutOfHeartsDialog.show(context, timeUntilNextRefill: timeUntilRefill);
+        }
+      }
+    }
 
     setState(() {
       _feedback = isCorrect ? FeedbackType.correct : FeedbackType.wrong;
@@ -138,22 +156,22 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
       case ExerciseType.mcq:
         return MCQExercise(
           exercise: exercise,
-          onAnswer: _handleAnswer,
+          onAnswer: (answer) => _handleAnswer(answer),
         );
       case ExerciseType.fill:
         return FillBlankExercise(
           exercise: exercise,
-          onAnswer: _handleAnswer,
+          onAnswer: (answer) => _handleAnswer(answer),
         );
       case ExerciseType.match:
         return MatchingExercise(
           exercise: exercise,
-          onAnswer: _handleAnswer,
+          onAnswer: (answer) => _handleAnswer(answer),
         );
       case ExerciseType.listen:
         return ListeningExercise(
           exercise: exercise,
-          onAnswer: _handleAnswer,
+          onAnswer: (answer) => _handleAnswer(answer),
         );
     }
   }
@@ -172,6 +190,8 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
             currentIndex: _currentIndex,
             totalCount: _exercises.length,
             onClose: () => Navigator.pop(context),
+            currentLives: _currentLives,
+            maxLives: _maxLives,
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -252,7 +272,12 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
             ),
           BottomFeedbackBar(
             type: _feedback,
-            onContinue: _feedback != FeedbackType.none ? _nextQuestion : null,
+            onContinue: _feedback != FeedbackType.none
+                ? () {
+                    HapticFeedback.selectionClick();
+                    _nextQuestion();
+                  }
+                : null,
           ),
         ],
       ),
