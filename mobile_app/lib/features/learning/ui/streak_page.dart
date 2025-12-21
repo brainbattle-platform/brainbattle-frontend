@@ -100,7 +100,7 @@ class _StreakPageState extends State<StreakPage> {
                   _StreakCalendar(streak: _streak),
                   const SizedBox(height: 24),
 
-                  // Streak freeze (stub)
+                  // Streak freeze
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -108,33 +108,46 @@ class _StreakPageState extends State<StreakPage> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.blue.withOpacity(0.3)),
                     ),
-                    child: Row(
+                    child: Column(
                       children: [
-                        const Icon(Icons.ac_unit, color: Colors.blue),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Streak Freeze',
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  color: isDark ? Colors.white : Colors.black87,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        Row(
+                          children: [
+                            const Icon(Icons.ac_unit, color: Colors.blue),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Streak Freeze',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      color: isDark ? Colors.white : Colors.black87,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Available: $_freezeCount',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: isDark ? Colors.white70 : Colors.black54,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                'Protect your streak (stub)',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: isDark ? Colors.white70 : Colors.black54,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                        Switch(
-                          value: false, // Stub
-                          onChanged: (_) {},
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  _showFreezeDialog(context);
+                                },
+                                child: const Text('Use / Buy'),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -142,6 +155,130 @@ class _StreakPageState extends State<StreakPage> {
                 ],
               ),
             ),
+    );
+  }
+
+  void _showFreezeDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? BBColors.darkCard : Colors.white,
+        title: const Text('Streak Freeze'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'You have $_freezeCount streak freeze(s) available.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Streak freeze protects your streak if you miss a day.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          if (_freezeCount > 0)
+            ElevatedButton(
+              onPressed: () {
+                // Freeze is automatically consumed when needed
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Freeze will be used automatically if needed')),
+                );
+              },
+              child: const Text('Use'),
+            ),
+          OutlinedButton(
+            onPressed: () {
+              // TODO: Implement purchase flow
+              _freezeService.addFreezes(1).then((_) {
+                _loadStreak();
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Purchase stub: +1 freeze')),
+                );
+              });
+            },
+            child: const Text('Buy (stub)'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFreezeDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? BBColors.darkCard : Colors.white,
+        title: const Text('Streak Freeze'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'You have $_freezeCount streak freeze(s) available.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Streak freeze protects your streak if you miss a day.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          if (_freezeCount > 0)
+            ElevatedButton(
+              onPressed: () {
+                // Freeze is automatically consumed when needed
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Freeze will be used automatically if needed')),
+                );
+              },
+              child: const Text('Use'),
+            ),
+          OutlinedButton(
+            onPressed: () {
+              // TODO: Implement purchase flow
+              _freezeService.addFreezes(1).then((_) {
+                _loadStreak();
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Purchase stub: +1 freeze')),
+                );
+              });
+            },
+            child: const Text('Buy (stub)'),
+          ),
+        ],
+      ),
     );
   }
 }
