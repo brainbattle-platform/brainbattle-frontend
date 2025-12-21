@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import 'battle_play_page.dart';
+import '../battle_routes.dart';
 
 enum BattleRole { listening, reading, writing }
 
@@ -13,6 +13,7 @@ class Battle3v3LobbyPage extends StatefulWidget {
     required this.roomCode,
     required this.isHost,
   });
+  static const routeName = BattleRoutes.v3Lobby;
 
   @override
   State<Battle3v3LobbyPage> createState() => _Battle3v3LobbyPageState();
@@ -350,11 +351,7 @@ class _Battle3v3LobbyPageState extends State<Battle3v3LobbyPage> {
                       ),
                     ),
                     onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const BattlePlayPage(),
-                        ),
-                      );
+                      Navigator.of(context).pushNamed(BattleRoutes.play);
                     },
                     child: Text(
                       widget.isHost ? 'Start battle' : 'Ready',

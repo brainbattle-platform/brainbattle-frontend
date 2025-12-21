@@ -5,6 +5,7 @@ class BattleResultPage extends StatelessWidget {
   final bool isWinner;
 
   const BattleResultPage({super.key, required this.isWinner});
+  static const routeName = BattleRoutes.result;
 
   @override
   Widget build(BuildContext context) {

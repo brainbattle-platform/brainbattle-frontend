@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import 'battle_1v1_lobby_page.dart';
+import '../battle_routes.dart';
 
 class Battle1v1EntryPage extends StatefulWidget {
   const Battle1v1EntryPage({super.key});
+  static const routeName = BattleRoutes.v1Entry;
 
   @override
   State<Battle1v1EntryPage> createState() => _Battle1v1EntryPageState();
@@ -258,14 +259,13 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
               ),
               onPressed: () {
                 // TODO: call API create duel
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => Battle1v1LobbyPage(
-                      roomCode: 'AB37X',
-                      battleType: _battleType,
-                      isHost: true,
-                    ),
-                  ),
+                Navigator.of(context).pushNamed(
+                  BattleRoutes.v1Lobby,
+                  arguments: {
+                    'roomCode': 'AB37X',
+                    'battleType': _battleType,
+                    'isHost': true,
+                  },
                 );
               },
               child: const Text(
@@ -340,16 +340,15 @@ class _Battle1v1EntryPageState extends State<Battle1v1EntryPage>
               ),
               onPressed: () {
                 // TODO: call API join duel
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => Battle1v1LobbyPage(
-                      roomCode: _codeCtrl.text.trim().isEmpty
-                          ? 'JOIN'
-                          : _codeCtrl.text.trim().toUpperCase(),
-                      battleType: 'UNKNOWN',
-                      isHost: false,
-                    ),
-                  ),
+                Navigator.of(context).pushNamed(
+                  BattleRoutes.v1Lobby,
+                  arguments: {
+                    'roomCode': _codeCtrl.text.trim().isEmpty
+                        ? 'JOIN'
+                        : _codeCtrl.text.trim().toUpperCase(),
+                    'battleType': 'UNKNOWN',
+                    'isHost': false,
+                  },
                 );
               },
               child: const Text(

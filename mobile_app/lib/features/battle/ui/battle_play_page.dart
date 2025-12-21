@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import 'battle_result_page.dart';
+import '../battle_routes.dart';
 
 class BattlePlayPage extends StatelessWidget {
   const BattlePlayPage({super.key});
+  static const routeName = BattleRoutes.play;
 
   @override
   Widget build(BuildContext context) {
@@ -401,10 +402,9 @@ class _ReactionBar extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.check_circle_rounded, color: Colors.white70),
           onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const BattleResultPage(isWinner: true),
-              ),
+            Navigator.of(context).pushNamed(
+              BattleRoutes.result,
+              arguments: {'isWinner': true},
             );
           },
         ),

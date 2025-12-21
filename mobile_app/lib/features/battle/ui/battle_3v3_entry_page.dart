@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import 'battle_3v3_lobby_page.dart';
+import '../battle_routes.dart';
 
 class Battle3v3EntryPage extends StatefulWidget {
   const Battle3v3EntryPage({super.key});
+  static const routeName = BattleRoutes.v3Entry;
 
   @override
   State<Battle3v3EntryPage> createState() => _Battle3v3EntryPageState();
@@ -132,13 +133,12 @@ class _Battle3v3EntryPageState extends State<Battle3v3EntryPage>
                 ),
               ),
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const Battle3v3LobbyPage(
-                      roomCode: 'TEAM1',
-                      isHost: true,
-                    ),
-                  ),
+                Navigator.of(context).pushNamed(
+                  BattleRoutes.v3Lobby,
+                  arguments: {
+                    'roomCode': 'TEAM1',
+                    'isHost': true,
+                  },
                 );
               },
               child: const Text(
@@ -218,15 +218,14 @@ class _Battle3v3EntryPageState extends State<Battle3v3EntryPage>
                 ),
               ),
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => Battle3v3LobbyPage(
-                      roomCode: _codeCtrl.text.trim().isEmpty
-                          ? 'TEAM'
-                          : _codeCtrl.text.trim().toUpperCase(),
-                      isHost: false,
-                    ),
-                  ),
+                Navigator.of(context).pushNamed(
+                  BattleRoutes.v3Lobby,
+                  arguments: {
+                    'roomCode': _codeCtrl.text.trim().isEmpty
+                        ? 'TEAM'
+                        : _codeCtrl.text.trim().toUpperCase(),
+                    'isHost': false,
+                  },
                 );
               },
               child: const Text(

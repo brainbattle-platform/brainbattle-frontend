@@ -15,7 +15,6 @@ import 'package:mobile_app/core/network/api_base.dart';
 
 import 'features/learning/learning.dart';
 
-import 'features/community/ui/shell/community_shell.dart';
 import 'features/community/ui/thread/thread_page.dart';
 import 'features/community/ui/clan/new_clan_page.dart';
 import 'features/shortvideo/shortvideo.dart';
@@ -37,7 +36,20 @@ class BrainBattleApp extends StatelessWidget {
       home: const SplashPage(),
       routes: {
         StarterPage.routeName: (_) => const StarterPage(),
-        CommunityShell.routeName: (_) => const CommunityShell(),
+        // DEPRECATED: /community route - redirects to ShortVideoShell with community tab
+        // Use ShortVideoShell.routeName instead
+        '/community': (context) {
+          // Redirect to ShortVideoShell and open community tab (index 1)
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.of(context).pushReplacementNamed(
+              ShortVideoShell.routeName,
+              arguments: {'initialTab': 1},
+            );
+          });
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        },
         NewClanPage.routeName: (_) => const NewClanPage(),
         ThreadPage.routeName: (_) => const ThreadPage(),
         LessonsScreen.routeName: (_) => const LessonsScreen(),
