@@ -5,7 +5,7 @@ import '../shortvideo.dart'; // ShortVideoFeedPage()
 
 // Các feature còn lại
 import '../../battle/ui/battle_shell.dart';
-import '../../community/ui/shell/community_shell.dart';
+import '../../community/ui/community_view.dart';
 import '../../learning/ui/galaxy_map_screen.dart'; // hoặc màn Lesson khác
 
 class ShortVideoShell extends StatefulWidget {
@@ -21,11 +21,29 @@ class _ShortVideoShellState extends State<ShortVideoShell> {
 
   // 0 = battle, 1 = community, 2 = shorts, 3 = learning
   int _index = 2;
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
     _controller = PageController(initialPage: _index);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Read route arguments after context is available
+    if (!_initialized) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map && args.containsKey('initialTab')) {
+        final tab = args['initialTab'] as int?;
+        if (tab != null && tab >= 0 && tab <= 3) {
+          _index = tab;
+          _controller.jumpToPage(_index);
+        }
+      }
+      _initialized = true;
+    }
   }
 
   @override
@@ -52,7 +70,7 @@ class _ShortVideoShellState extends State<ShortVideoShell> {
           BattleShell(),
 
           // Trái: Community
-          CommunityShell(),
+          CommunityView(),
 
           // Giữa: Short video feed (vuốt dọc đổi video)
           ShortVideoFeedPage(),

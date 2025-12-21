@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_theme.dart';
 import '../data/lesson_model.dart';
-import '../widgets/skill_planet.dart'; // để lấy enum Skill
+import '../widgets/skill_planet.dart';
+import 'lesson_start_page.dart';
 
 class LessonDetailScreen extends StatelessWidget {
   final Lesson lesson;
-  final Skill? initialSkill;   // 👈 thêm tuỳ chọn kỹ năng
-  final Object? heroTag;       // 👈 cho Hero animation từ SkillPlanet
+  final Skill? initialSkill;
+  final Object? heroTag;
 
   const LessonDetailScreen({
     super.key,
@@ -16,8 +18,11 @@ class LessonDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0B1020),
+      backgroundColor: isDark ? BBColors.darkBg : null,
       appBar: AppBar(
         title: Text(
           initialSkill != null
@@ -25,9 +30,9 @@ class LessonDetailScreen extends StatelessWidget {
               : lesson.title,
         ),
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
+        foregroundColor: isDark ? Colors.white : null,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,7 +43,7 @@ class LessonDetailScreen extends StatelessWidget {
                 child: Row(
                   children: [
                     CircleAvatar(
-                      backgroundColor: Colors.blueAccent,
+                      backgroundColor: theme.colorScheme.primary,
                       child: initialSkill != null
                           ? Icon(initialSkill!.icon, color: Colors.white)
                           : Text(lesson.title[0]),
@@ -46,9 +51,8 @@ class LessonDetailScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Text(
                       lesson.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: isDark ? Colors.white : Colors.black87,
                         fontWeight: FontWeight.bold,
                       ),
                     )
@@ -58,11 +62,43 @@ class LessonDetailScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               lesson.description,
-              style: const TextStyle(color: Colors.white70, fontSize: 16),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: isDark ? Colors.white70 : Colors.black54,
+              ),
             ),
             const SizedBox(height: 12),
-            Text("Level: ${lesson.level}",
-                style: const TextStyle(color: Colors.white, fontSize: 16)),
+            Text(
+              "Level: ${lesson.level}",
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 32),
+            // Start lesson button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => LessonStartPage(
+                        lesson: lesson,
+                        skill: initialSkill,
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Start Lesson'),
+              ),
+            ),
           ],
         ),
       ),

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import 'battle_1v1_entry_page.dart';
-import 'battle_3v3_entry_page.dart';
+import '../battle_routes.dart';
 import '../widgets/battle_mode_card.dart';
 
 class BattleQueuePage extends StatefulWidget {
   const BattleQueuePage({super.key});
+  static const routeName = BattleRoutes.mode;
 
   @override
   State<BattleQueuePage> createState() => _BattleQueuePageState();
@@ -41,15 +41,11 @@ class _BattleQueuePageState extends State<BattleQueuePage>
   }
 
   Future<void> _open1v1Entry() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const Battle1v1EntryPage()),
-    );
+    await Navigator.of(context).pushNamed(BattleRoutes.v1Entry);
   }
 
   Future<void> _open3v3Entry() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const Battle3v3EntryPage()),
-    );
+    await Navigator.of(context).pushNamed(BattleRoutes.v3Entry);
   }
 
   @override

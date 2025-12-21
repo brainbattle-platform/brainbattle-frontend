@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import 'battle_play_page.dart';
+import '../battle_routes.dart';
 
 class Battle1v1LobbyPage extends StatelessWidget {
   final String roomCode;
@@ -13,6 +13,7 @@ class Battle1v1LobbyPage extends StatelessWidget {
     required this.battleType,
     required this.isHost,
   });
+  static const routeName = BattleRoutes.v1Lobby;
 
   String _battleTypeLabel() {
     switch (battleType) {
@@ -236,9 +237,7 @@ class Battle1v1LobbyPage extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const BattlePlayPage()),
-                    );
+                    Navigator.of(context).pushNamed(BattleRoutes.play);
                   },
                   child: const Text(
                     'Start duel',
