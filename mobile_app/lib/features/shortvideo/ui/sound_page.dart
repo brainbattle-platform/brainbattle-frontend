@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import '../data/shortvideo_model.dart';
 import '../data/shortvideo_service.dart';
+import '../data/local_shorts_store.dart';
+import '../core/sound_service.dart';
 import '../shortvideo_routes.dart';
+import 'widgets/empty_state.dart';
+import 'widgets/error_state.dart';
 
 class SoundPage extends StatefulWidget {
   const SoundPage({super.key});
@@ -14,8 +18,13 @@ class SoundPage extends StatefulWidget {
 
 class _SoundPageState extends State<SoundPage> {
   final ShortVideoService _service = ShortVideoService();
+  final LocalShortsStore _localStore = LocalShortsStore.instance;
+  final SoundService _soundService = SoundService.instance;
+  
+  String? _soundId;
   String? _soundName;
   bool _loading = true;
+  String? _errorMessage;
   List<ShortVideo> _videos = [];
 
   @override
