@@ -37,7 +37,6 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
   int _currentIndex = 0;
   final Map<String, AttemptResult> _attempts = {};
   FeedbackType _feedback = FeedbackType.none;
-  String? _userAnswer;
   bool _showExplanation = false;
   DateTime? _startTime;
 
@@ -54,7 +53,6 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
         exercise.correctAnswer.trim().toLowerCase();
 
     setState(() {
-      _userAnswer = answer;
       _feedback = isCorrect ? FeedbackType.correct : FeedbackType.wrong;
       _attempts[exercise.id] = AttemptResult(
         exerciseId: exercise.id,
@@ -71,7 +69,6 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
       setState(() {
         _currentIndex++;
         _feedback = FeedbackType.none;
-        _userAnswer = null;
         _showExplanation = false;
       });
     } else {
