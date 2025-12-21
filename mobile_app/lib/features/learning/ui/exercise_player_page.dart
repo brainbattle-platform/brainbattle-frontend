@@ -15,6 +15,9 @@ import 'widgets/exercise_templates/matching_exercise.dart';
 import 'widgets/exercise_templates/listening_exercise.dart';
 import 'lesson_summary_page.dart';
 import '../domain/lesson_summary_model.dart';
+import '../core/hearts_service.dart';
+import 'widgets/out_of_hearts_dialog.dart';
+import 'package:flutter/services.dart';
 
 class ExercisePlayerPage extends StatefulWidget {
   final Lesson lesson;
@@ -40,6 +43,9 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
   bool _showExplanation = false;
   DateTime? _lessonStartTime;
   final Map<String, DateTime> _exerciseStartTimes = {};
+  int _currentLives = 5;
+  int _maxLives = 5;
+  final HeartsService _heartsService = HeartsService.instance;
 
   @override
   void initState() {
@@ -50,6 +56,16 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
     if (_exercises.isNotEmpty) {
       _exerciseStartTimes[_exercises[0].id] = DateTime.now();
     }
+    _loadHearts();
+  }
+
+  Future<void> _loadHearts() async {
+    final current = await _heartsService.getCurrentLives();
+    final max = await _heartsService.getMaxLives();
+    setState(() {
+      _currentLives = current;
+      _maxLives = max;
+    });
   }
 
   void _handleAnswer(String answer) {
