@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_theme.dart';
+import '../../../core/theme/app_theme.dart';
 import '../widgets/skill_planet.dart';
 import '../learning_routes.dart';
 import 'lesson_start_page.dart';
@@ -111,7 +111,7 @@ class PracticeHubPage extends StatelessWidget {
             const SizedBox(height: 12),
             _QuickPracticeCard(
               title: 'Review all mistakes',
-              icon: Icons.review,
+              icon: Icons.rate_review,
               onTap: () {
                 // Navigate to mistakes review
               },

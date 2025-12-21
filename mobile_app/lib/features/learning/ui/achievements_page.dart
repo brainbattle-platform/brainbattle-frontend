@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_theme.dart';
+import '../../../core/theme/app_theme.dart';
 import '../learning_routes.dart';
 
 class AchievementsPage extends StatelessWidget {
@@ -150,7 +150,7 @@ class _AchievementCard extends StatelessWidget {
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: achievement.unlocked
                           ? (isDark ? Colors.white70 : Colors.black54)
-                          : (isDark ? Colors.white24 : Colors.black24),
+                          : (isDark ? Colors.white38 : Colors.black38),
                     ),
                   ),
                 ],
