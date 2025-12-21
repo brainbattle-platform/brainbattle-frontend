@@ -38,13 +38,18 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
   final Map<String, AttemptResult> _attempts = {};
   FeedbackType _feedback = FeedbackType.none;
   bool _showExplanation = false;
-  DateTime? _startTime;
+  DateTime? _lessonStartTime;
+  final Map<String, DateTime> _exerciseStartTimes = {};
 
   @override
   void initState() {
     super.initState();
     _exercises = MockLearningData.exercisesForLesson(widget.lesson.id);
-    _startTime = DateTime.now();
+    _lessonStartTime = DateTime.now();
+    // Track start time for first exercise
+    if (_exercises.isNotEmpty) {
+      _exerciseStartTimes[_exercises[0].id] = DateTime.now();
+    }
   }
 
   void _handleAnswer(String answer) {
@@ -52,13 +57,17 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
     final isCorrect = answer.trim().toLowerCase() ==
         exercise.correctAnswer.trim().toLowerCase();
 
+    // Calculate time spent on this exercise
+    final exerciseStart = _exerciseStartTimes[exercise.id] ?? DateTime.now();
+    final timeSpent = DateTime.now().difference(exerciseStart).inSeconds;
+
     setState(() {
       _feedback = isCorrect ? FeedbackType.correct : FeedbackType.wrong;
       _attempts[exercise.id] = AttemptResult(
         exerciseId: exercise.id,
         userAnswer: answer,
         isCorrect: isCorrect,
-        timeSpent: 0, // TODO: calculate from start
+        timeSpent: timeSpent,
         attemptedAt: DateTime.now(),
       );
     });
@@ -70,10 +79,13 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
         _currentIndex++;
         _feedback = FeedbackType.none;
         _showExplanation = false;
+        // Track start time for next exercise
+        final nextExercise = _exercises[_currentIndex];
+        _exerciseStartTimes[nextExercise.id] = DateTime.now();
       });
     } else {
       // Go to summary
-      final totalTime = DateTime.now().difference(_startTime!).inSeconds;
+      final totalTime = DateTime.now().difference(_lessonStartTime!).inSeconds;
       final correctCount = _attempts.values.where((a) => a.isCorrect).length;
       final wrongCount = _attempts.values.where((a) => !a.isCorrect).length;
       final mistakeIds = _attempts.entries
