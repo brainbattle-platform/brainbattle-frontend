@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/api_config.dart';
 import '../domain/exercise_model.dart';
-import '../domain/domain_model.dart';
 import 'unit_model.dart';
 import 'lesson_model.dart';
 import '../widgets/skill_planet.dart';

@@ -46,17 +46,39 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
   int _currentLives = 5;
   int _maxLives = 5;
   final HeartsService _heartsService = HeartsService.instance;
+  final LearningRepository _repository = LearningRepository();
+  bool _loadingExercises = false;
 
   @override
   void initState() {
     super.initState();
-    _exercises = MockLearningData.exercisesForLesson(widget.lesson.id);
+    _exercises = [];
     _lessonStartTime = DateTime.now();
-    // Track start time for first exercise
-    if (_exercises.isNotEmpty) {
-      _exerciseStartTimes[_exercises[0].id] = DateTime.now();
-    }
     _loadHearts();
+    _loadExercises();
+  }
+
+  Future<void> _loadExercises() async {
+    setState(() => _loadingExercises = true);
+    try {
+      final items = await _repository.getItems(lessonId: widget.lesson.id);
+      setState(() {
+        _exercises = items;
+        _loadingExercises = false;
+        if (_exercises.isNotEmpty) {
+          _exerciseStartTimes[_exercises[0].id] = DateTime.now();
+        }
+      });
+    } catch (e) {
+      // Fallback to mock
+      setState(() {
+        _exercises = MockLearningData.exercisesForLesson(widget.lesson.id);
+        _loadingExercises = false;
+        if (_exercises.isNotEmpty) {
+          _exerciseStartTimes[_exercises[0].id] = DateTime.now();
+        }
+      });
+    }
   }
 
   Future<void> _loadHearts() async {
@@ -180,6 +202,14 @@ class _ExercisePlayerPageState extends State<ExercisePlayerPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    if (_loadingExercises || _exercises.isEmpty) {
+      return Scaffold(
+        backgroundColor: isDark ? BBColors.darkBg : null,
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final exercise = _exercises[_currentIndex];
 
     return Scaffold(
