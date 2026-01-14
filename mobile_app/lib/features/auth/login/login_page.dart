@@ -52,7 +52,6 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     if (err == 'EMAIL_NOT_VERIFIED') {
-      // Điều hướng sang Verify OTP và cho phép resend code
       Navigator.push(
         context,
         MaterialPageRoute(

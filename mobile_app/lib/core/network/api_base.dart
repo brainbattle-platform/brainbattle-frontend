@@ -1,8 +1,7 @@
-// lib/core/network/api_base.dart
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
-const String _lanPc = 'http://192.168.1.202:3000'; // PC đang chạy BE
+const String _lanPc = 'http://192.168.1.112:4001'; // PC đang chạy BE
 const String _emu = 'http://10.0.2.2:3000';       // Android Emulator AVD - Only change here if use android studio virtual machine
 
 String apiBase() {
