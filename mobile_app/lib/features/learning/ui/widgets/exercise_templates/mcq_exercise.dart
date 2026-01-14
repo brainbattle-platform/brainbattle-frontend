@@ -4,12 +4,12 @@ import '../../../domain/exercise_model.dart';
 
 class MCQExercise extends StatefulWidget {
   final ExerciseItem exercise;
-  final Function(String answer) onAnswer;
+  final Function(String answer)? onAnswer; // Nullable: null means disabled
 
   const MCQExercise({
     super.key,
     required this.exercise,
-    required this.onAnswer,
+    this.onAnswer,
   });
 
   @override
@@ -54,10 +54,12 @@ class _MCQExerciseState extends State<MCQExercise> {
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: InkWell(
-              onTap: () {
-                setState(() => _selectedAnswer = option);
-                widget.onAnswer(option);
-              },
+              onTap: widget.onAnswer == null
+                  ? null
+                  : () {
+                      setState(() => _selectedAnswer = option);
+                      widget.onAnswer!(option);
+                    },
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 padding: const EdgeInsets.all(16),

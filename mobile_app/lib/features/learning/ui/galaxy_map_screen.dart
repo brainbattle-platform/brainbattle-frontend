@@ -1,12 +1,11 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../core/utils/json_num.dart';
 
-import '../data/unit_service.dart';
 import '../data/unit_model.dart';
 import '../data/lesson_model.dart';
-import '../data/lesson_service.dart';
-import '../data/learning_repository.dart';
+import '../data/learning_api_client.dart';
 import '../core/unlock_service.dart';
 import 'widgets/learning_loading_skeleton.dart';
 import 'widgets/learning_empty_state.dart';
@@ -31,14 +30,12 @@ class GalaxyMapScreen extends StatefulWidget {
 }
 
 class _GalaxyMapScreenState extends State<GalaxyMapScreen> {
-  final _svc = UnitService();
-  final _repository = LearningRepository();
+  final _apiClient = LearningApiClient();
   final _unlockService = UnlockService.instance;
   final _scroll = ScrollController();
   List<Unit> _units = [];
   bool _loading = true;
   String? _error;
-  bool _usingOfflineData = false;
 
   @override
   void initState() {
@@ -50,35 +47,76 @@ class _GalaxyMapScreenState extends State<GalaxyMapScreen> {
     setState(() {
       _loading = true;
       _error = null;
-      _usingOfflineData = false;
     });
 
     try {
-      // Try repository first (with API fallback)
-      final units = await _repository.getUnits(domainId: 'english');
-      // Apply unlock logic based on placement
-      final unlockedUnits = await _unlockService.applyUnlockLogic(units);
+      // Call GET /api/learning/map
+      final mapData = await _apiClient.getLearningMap();
+      
+      // Parse response: {unitId, unitTitle, skills: [{skillId, title, state, position, progressPercent}]}
+      final unitId = mapData['unitId'] as String? ?? 'unit-1';
+      final unitTitle = mapData['unitTitle'] as String? ?? 'Unit 1';
+      final skillsData = mapData['skills'] as List<dynamic>? ?? [];
+      
+      // Convert skills to lessons
+      final lessons = skillsData.map((skill) {
+        final skillId = skill['skillId'] as String? ?? '';
+        final title = skill['title'] as String? ?? '';
+        final stateStr = skill['state'] as String? ?? 'LOCKED';
+        final progressPercent = JsonNum.asDoubleOr(skill['progressPercent'], 0.0);
+        
+        // Convert state string to LessonStatus
+        LessonStatus status;
+        switch (stateStr.toUpperCase()) {
+          case 'COMPLETED':
+            status = LessonStatus.completed;
+            break;
+          case 'LOCKED':
+            status = LessonStatus.locked;
+            break;
+          case 'CURRENT':
+            status = LessonStatus.unlocked;
+            break;
+          case 'AVAILABLE':
+            status = LessonStatus.unlocked;
+            break;
+          default:
+            status = LessonStatus.locked;
+        }
+        
+        // Convert progressPercent (0-100) to progress (0-1)
+        final progress = progressPercent / 100.0;
+        
+        return Lesson(
+          id: skillId,
+          title: title,
+          description: title,
+          level: 'A1',
+          progress: progress,
+          status: status,
+        );
+      }).toList();
+      
+      // Create a single unit with all lessons
+      final unit = Unit(
+        id: unitId,
+        title: unitTitle,
+        color: const Color(0xFFFFD166), // Default color
+        lessons: lessons,
+      );
+      
+      // Apply unlock logic (if needed, but API already provides state)
+      final unlockedUnits = await _unlockService.applyUnlockLogic([unit]);
+      
       setState(() {
         _units = unlockedUnits;
         _loading = false;
       });
     } catch (e) {
-      // Fallback to UnitService (mock)
-      try {
-        final units = await _svc.fetchUnits();
-        // Apply unlock logic based on placement
-        final unlockedUnits = await _unlockService.applyUnlockLogic(units);
-        setState(() {
-          _units = unlockedUnits;
-          _loading = false;
-          _usingOfflineData = true;
-        });
-      } catch (fallbackError) {
-        setState(() {
-          _error = 'Failed to load units: ${fallbackError.toString()}';
-          _loading = false;
-        });
-      }
+      setState(() {
+        _error = 'Failed to load learning map: ${e.toString()}';
+        _loading = false;
+      });
     }
   }
 
@@ -118,29 +156,6 @@ class _GalaxyMapScreenState extends State<GalaxyMapScreen> {
                         const Positioned.fill(child: Starfield(count: 160)),
                         Column(
                           children: [
-                            if (_usingOfflineData)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                color: Colors.orange.withOpacity(0.1),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.wifi_off, size: 16, color: Colors.orange),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        'Using offline data',
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                          color: Colors.orange,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
                             Expanded(
                               child: ListView.builder(
                                 controller: _scroll,
@@ -174,6 +189,7 @@ class _UnitSystemStrip extends StatefulWidget {
 class _UnitSystemStripState extends State<_UnitSystemStrip> with TickerProviderStateMixin {
   late final AnimationController _rotation;
   String? _expandedLessonId;
+  final _apiClient = LearningApiClient();
 
   @override
   void initState() {
@@ -372,17 +388,48 @@ class _UnitSystemStripState extends State<_UnitSystemStrip> with TickerProviderS
             skill: skills[i],
             color: color,
             heroTag: tag,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => LessonDetailScreen(
-                    lesson: lesson,
-                    initialSkill: skills[i],
-                    heroTag: tag,
-                  ),
-                ),
-              );
+            onTap: () async {
+              // 5.2: Fetch modes for this skill (lessonId) when tapped
+              try {
+                final modesData = await _apiClient.getModesForSkill(lesson.id);
+                // Parse modes: {skillId, skillTitle, modes: [{mode, state, bestScore}]}
+                final modes = modesData['modes'] as List<dynamic>? ?? [];
+                final skillMode = modes.firstWhere(
+                  (m) => (m['mode'] as String?)?.toLowerCase() == skills[i].name.toLowerCase(),
+                  orElse: () => null,
+                );
+                
+                // Check if mode is available
+                final modeState = skillMode?['state'] as String? ?? 'LOCKED';
+                if (modeState == 'LOCKED') {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('This mode is locked. Complete previous lessons to unlock.')),
+                    );
+                  }
+                  return;
+                }
+                
+                // Navigate to lesson detail with skill
+                if (mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => LessonDetailScreen(
+                        lesson: lesson,
+                        initialSkill: skills[i],
+                        heroTag: tag,
+                      ),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to load modes: ${e.toString()}')),
+                  );
+                }
+              }
             },
           ),
         ),
