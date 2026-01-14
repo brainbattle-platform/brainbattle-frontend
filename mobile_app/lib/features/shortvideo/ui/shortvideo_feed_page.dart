@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/shortvideo_model.dart';
-import '../data/shortvideo_service.dart';
+import '../data/shorts_repository.dart';
 import '../widgets/shortvideo_player.dart';
 import '../widgets/top_tabs.dart';
 import '../widgets/right_rail.dart';
@@ -24,7 +24,7 @@ class ShortVideoFeedPage extends StatefulWidget {
 }
 
 class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
-  final _svc = ShortVideoService();
+  final _repository = ShortsRepository.instance.repository;
   final PageController _page = PageController();
   final MuteService _muteService = MuteService.instance;
   final FollowService _followService = FollowService.instance;
@@ -37,6 +37,7 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
   int _pageNum = 1;
   bool _muted = false;
   int _currentIndex = 0;
+  bool _isUsingMock = false;
 
   // controller + duration per index (để seek/progress)
   final Map<int, Duration> _durations = {};
@@ -50,6 +51,14 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
     _loadMuteState();
     _load();
     _localStore.init(); // Initialize local store
+    _repository.isUsingMock.addListener(_onMockStateChanged);
+    _isUsingMock = _repository.isUsingMock.value;
+  }
+
+  void _onMockStateChanged() {
+    if (mounted) {
+      setState(() => _isUsingMock = _repository.isUsingMock.value);
+    }
   }
 
   Future<void> _loadMuteState() async {
@@ -74,25 +83,36 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
   }
 
   Future<void> _load({bool append = true}) async {
-    // Load from API
-    final remoteData = await _svc.fetchFeed(page: _pageNum);
+    try {
+      setState(() => _loading = true);
 
-    // Load from local store
-    final localData = await _localStore.listFeedPosts();
+      // Use repository with automatic fallback
+      final data = await _repository.getFeed(page: _pageNum);
 
-    // Merge: local first, then remote
-    final allData = [...localData, ...remoteData];
+      // Also load local posts
+      final localData = await _localStore.listFeedPosts();
 
-    setState(() {
-      if (append) {
-        _items.addAll(allData);
-      } else {
-        _items
-          ..clear()
-          ..addAll(allData);
+      // Merge: local first, then remote/mock
+      final allData = [...localData, ...data];
+
+      if (mounted) {
+        setState(() {
+          if (append) {
+            _items.addAll(allData);
+          } else {
+            _items
+              ..clear()
+              ..addAll(allData);
+          }
+          _loading = false;
+        });
       }
-      _loading = false;
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+      // Error already handled by repository fallback
+    }
   }
 
   Future<void> _loadMoreIfNeeded(int index) async {
@@ -218,6 +238,7 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
 
   @override
   void dispose() {
+    _repository.isUsingMock.removeListener(_onMockStateChanged);
     _controllerPool.disposeAll();
     _page.dispose();
     super.dispose();
@@ -236,6 +257,31 @@ class _ShortVideoFeedPageState extends State<ShortVideoFeedPage> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
+          // Demo data banner
+          if (_isUsingMock)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                color: Colors.orange.withOpacity(0.9),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.info_outline, color: Colors.white, size: 16),
+                    SizedBox(width: 8),
+                    Text(
+                      'Demo data (offline)',
+                      style: TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           PageView.builder(
             controller: _page,
             scrollDirection: Axis.vertical,

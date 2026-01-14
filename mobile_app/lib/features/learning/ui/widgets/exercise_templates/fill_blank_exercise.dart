@@ -4,12 +4,12 @@ import '../../../domain/exercise_model.dart';
 
 class FillBlankExercise extends StatefulWidget {
   final ExerciseItem exercise;
-  final Function(String answer) onAnswer;
+  final Function(String answer)? onAnswer; // Nullable: null means disabled
 
   const FillBlankExercise({
     super.key,
     required this.exercise,
-    required this.onAnswer,
+    this.onAnswer,
   });
 
   @override
@@ -55,9 +55,11 @@ class _FillBlankExerciseState extends State<FillBlankExercise> {
             final isSelected = _selectedAnswer == option;
 
             return InkWell(
-              onTap: () {
-                setState(() => _selectedAnswer = option);
-                widget.onAnswer(option);
+              onTap: widget.onAnswer == null
+                  ? null
+                  : () {
+                      setState(() => _selectedAnswer = option);
+                      widget.onAnswer!(option);
               },
               borderRadius: BorderRadius.circular(20),
               child: Container(

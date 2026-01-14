@@ -1,8 +1,13 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
+<<<<<<< HEAD
 const String _lanPc = 'http://192.168.1.112:4001'; // PC đang chạy BE
 const String _emu = 'http://10.0.2.2:3000';       // Android Emulator AVD - Only change here if use android studio virtual machine
+=======
+const String _lanPc = 'http://10.0.16.6:3001'; // PC đang chạy BE
+const String _emu = 'http://10.0.2.2:3001';       // Android Emulator AVD - Only change here if use android studio virtual machine
+>>>>>>> main
 
 String apiBase() {
   // Ưu tiên biến môi trường

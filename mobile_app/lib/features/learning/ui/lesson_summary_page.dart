@@ -31,9 +31,11 @@ class LessonSummaryPage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         foregroundColor: isDark ? Colors.white : null,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
+      body: SafeArea(
+        bottom: true, // Prevent overflow on small devices with gesture bar
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Success header
@@ -164,6 +166,7 @@ class LessonSummaryPage extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
       ),
     );

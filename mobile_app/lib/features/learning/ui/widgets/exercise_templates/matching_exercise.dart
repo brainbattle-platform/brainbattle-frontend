@@ -4,12 +4,12 @@ import '../../../domain/exercise_model.dart';
 
 class MatchingExercise extends StatefulWidget {
   final ExerciseItem exercise;
-  final Function(String answer) onAnswer;
+  final Function(String answer)? onAnswer; // Nullable: null means disabled
 
   const MatchingExercise({
     super.key,
     required this.exercise,
-    required this.onAnswer,
+    this.onAnswer,
   });
 
   @override
@@ -31,13 +31,14 @@ class _MatchingExerciseState extends State<MatchingExercise> {
   }
 
   void _selectMatch(String left, String right) {
+    if (widget.onAnswer == null) return; // Disabled during review
     setState(() {
       _matches[left] = right;
       // Build answer string
       final answer = _matches.entries
           .map((e) => '${e.key}-${e.value}')
           .join(',');
-      widget.onAnswer(answer);
+      widget.onAnswer!(answer);
     });
   }
 

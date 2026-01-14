@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -6,12 +8,12 @@ import '../../../domain/exercise_model.dart';
 
 class ListeningExercise extends StatefulWidget {
   final ExerciseItem exercise;
-  final Function(String answer) onAnswer;
+  final Function(String answer)? onAnswer; // Nullable: null means disabled
 
   const ListeningExercise({
     super.key,
     required this.exercise,
-    required this.onAnswer,
+    this.onAnswer,
   });
 
   @override
@@ -26,6 +28,17 @@ class _ListeningExerciseState extends State<ListeningExercise> {
   Duration _position = Duration.zero;
   bool _isLoading = false;
   String? _audioError;
+  StreamSubscription<Duration?>? _durationSubscription;
+  StreamSubscription<Duration>? _positionSubscription;
+  StreamSubscription<PlayerState>? _stateSubscription;
+  
+  /// Helper to log timestamped events
+  void _logEvent(String event) {
+    if (kDebugMode) {
+      final timestamp = DateTime.now().toIso8601String();
+      debugPrint('[TS $timestamp] ListeningExercise: $event');
+    }
+  }
 
   @override
   void initState() {
@@ -46,17 +59,19 @@ class _ListeningExerciseState extends State<ListeningExercise> {
     _audioPlayer = AudioPlayer();
     try {
       await _audioPlayer!.setUrl(widget.exercise.questionAudio!);
-      _audioPlayer!.durationStream.listen((duration) {
-        if (mounted && duration != null) {
-          setState(() => _duration = duration);
+      
+      // Store subscriptions so we can cancel them in dispose
+      _durationSubscription = _audioPlayer!.durationStream.listen((duration) {
+        if (mounted) {
+          setState(() => _duration = duration ?? Duration.zero);
         }
       });
-      _audioPlayer!.positionStream.listen((position) {
+      _positionSubscription = _audioPlayer!.positionStream.listen((position) {
         if (mounted) {
           setState(() => _position = position);
         }
       });
-      _audioPlayer!.playerStateStream.listen((state) {
+      _stateSubscription = _audioPlayer!.playerStateStream.listen((state) {
         if (mounted) {
           if (state.processingState == ProcessingState.completed) {
             setState(() => _isPlaying = false);
@@ -81,8 +96,31 @@ class _ListeningExerciseState extends State<ListeningExercise> {
 
   @override
   void dispose() {
-    _audioPlayer?.dispose();
+    _logEvent('dispose() called');
+    
+    // Cancel all stream subscriptions first
+    _durationSubscription?.cancel();
+    _positionSubscription?.cancel();
+    _stateSubscription?.cancel();
+    _durationSubscription = null;
+    _positionSubscription = null;
+    _stateSubscription = null;
+    
+    // Then pause and dispose audio player
+    try {
+      if (_audioPlayer != null) {
+        _logEvent('pausing audio player');
+        _audioPlayer!.pause();
+        _logEvent('disposing audio player');
+        _audioPlayer!.dispose();
+        _audioPlayer = null;
+      }
+    } catch (e) {
+      _logEvent('error during dispose: $e');
+    }
+    
     super.dispose();
+    _logEvent('dispose() completed');
   }
 
   Future<void> _togglePlayback() async {
@@ -105,15 +143,17 @@ class _ListeningExerciseState extends State<ListeningExercise> {
 
     try {
       if (_isPlaying) {
+        _logEvent('pause() called');
         await _audioPlayer?.pause();
       } else {
+        _logEvent('play() called');
         await _audioPlayer?.play();
       }
       if (mounted) {
         setState(() => _isPlaying = !_isPlaying);
       }
     } catch (e) {
-      debugPrint('Error during playback: $e');
+      _logEvent('error during playback: $e');
       if (mounted) {
         setState(() {
           _audioError = 'Playback error';
@@ -328,10 +368,12 @@ class _ListeningExerciseState extends State<ListeningExercise> {
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: InkWell(
-              onTap: () {
-                setState(() => _selectedAnswer = option);
-                widget.onAnswer(option);
-              },
+              onTap: widget.onAnswer == null
+                  ? null
+                  : () {
+                      setState(() => _selectedAnswer = option);
+                      widget.onAnswer!(option);
+                    },
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 padding: const EdgeInsets.all(16),
