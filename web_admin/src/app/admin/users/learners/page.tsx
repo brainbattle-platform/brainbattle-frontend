@@ -10,16 +10,42 @@ import { mockLearners } from "@/mock/learners.mock";
 import { LearnerGrowthChartCard } from "@/components/learners/LearnerGrowthChartCard";
 import { LearnerStatusDonutCard } from "@/components/learners/LearnerStatusDonutCard";
 import { LearnerBulkActionsBar } from "@/components/learners/LearnerBulkActionsBar";
+import { adminAnalyticsApi } from "@/lib/api/admin-analytics";
 
 export default function LearnersPage() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<AccountStatus | "All">("All");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(false);
+  const [userLearningStats, setUserLearningStats] = useState<Record<string, any>>({});
 
   useEffect(() => {
+    // Load mock users (in real app, this would come from auth-service)
     setUsers(mockLearners);
   }, []);
+
+  // Fetch learning stats for users when they are selected or viewed
+  useEffect(() => {
+    const fetchLearningStats = async () => {
+      // For now, we'll fetch stats for all users on mount
+      // In a real app, you might want to fetch on-demand when viewing user details
+      const stats: Record<string, any> = {};
+      
+      // Try to extract numeric userId from mock data (if available)
+      // Note: mockLearners use UUID strings, but API expects numeric userId
+      // This is a limitation - in production, you'd need to map UUID to numeric ID
+      // or have the API accept UUID
+      
+      // For demo purposes, we'll skip fetching if userIds are not numeric
+      // In production, you'd have a mapping service or API that accepts UUIDs
+      
+      setUserLearningStats(stats);
+    };
+
+    // Uncomment when you have proper userId mapping:
+    // fetchLearningStats();
+  }, [users]);
 
   const filtered = useMemo(() => {
     const text = q.trim().toLowerCase();

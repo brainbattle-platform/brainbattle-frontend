@@ -2,7 +2,7 @@
 
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
-type TabKey = "brand" | "mentions";
+type TabKey = "attempts" | "completions" | "brand" | "mentions";
 
 type BrandPoint = {
   day: string;
@@ -16,10 +16,16 @@ type MentionPoint = {
   citations: number;
 };
 
+type LearningPoint = {
+  day: string;
+  attempts: number;
+  completions: number;
+};
+
 interface Props {
   title: string;
   subtitle?: string;
-  data: Array<BrandPoint | MentionPoint>;
+  data: Array<BrandPoint | MentionPoint | LearningPoint>;
   tab: TabKey;
   onTabChange: (t: TabKey) => void;
 }
@@ -60,6 +66,10 @@ export default function TrendChartCard({
   onTabChange,
 }: Props) {
   const isBrand = tab === "brand";
+  const isMentions = tab === "mentions";
+  const isAttempts = tab === "attempts";
+  const isCompletions = tab === "completions";
+  const isLearning = isAttempts || isCompletions;
 
   return (
     <div
@@ -81,26 +91,53 @@ export default function TrendChartCard({
         </div>
 
         <div className="flex items-center gap-4 text-sm">
-          <button
-            onClick={() => onTabChange("brand")}
-            className={
-              isBrand
-                ? "font-semibold text-gray-900 border-b-2 border-gray-900 pb-1"
-                : "text-gray-500 hover:text-gray-700 pb-1"
-            }
-          >
-            Visibility & Presence
-          </button>
-          <button
-            onClick={() => onTabChange("mentions")}
-            className={
-              !isBrand
-                ? "font-semibold text-gray-900 border-b-2 border-gray-900 pb-1"
-                : "text-gray-500 hover:text-gray-700 pb-1"
-            }
-          >
-            Mentions & Citations
-          </button>
+          {isLearning ? (
+            <>
+              <button
+                onClick={() => onTabChange("attempts")}
+                className={
+                  isAttempts
+                    ? "font-semibold text-gray-900 border-b-2 border-gray-900 pb-1"
+                    : "text-gray-500 hover:text-gray-700 pb-1"
+                }
+              >
+                Attempts
+              </button>
+              <button
+                onClick={() => onTabChange("completions")}
+                className={
+                  isCompletions
+                    ? "font-semibold text-gray-900 border-b-2 border-gray-900 pb-1"
+                    : "text-gray-500 hover:text-gray-700 pb-1"
+                }
+              >
+                Completions
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => onTabChange("brand")}
+                className={
+                  isBrand
+                    ? "font-semibold text-gray-900 border-b-2 border-gray-900 pb-1"
+                    : "text-gray-500 hover:text-gray-700 pb-1"
+                }
+              >
+                Visibility & Presence
+              </button>
+              <button
+                onClick={() => onTabChange("mentions")}
+                className={
+                  isMentions
+                    ? "font-semibold text-gray-900 border-b-2 border-gray-900 pb-1"
+                    : "text-gray-500 hover:text-gray-700 pb-1"
+                }
+              >
+                Mentions & Citations
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -137,7 +174,31 @@ export default function TrendChartCard({
 
             <Tooltip content={<SaaSTooltip />} />
 
-            {isBrand ? (
+            {isLearning ? (
+              <>
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="attempts"
+                  name="Attempts"
+                  stroke="#ff5d82"
+                  strokeWidth={2.5}
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                />
+
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="completions"
+                  name="Completions"
+                  stroke="#a855f7"
+                  strokeWidth={2.5}
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                />
+              </>
+            ) : isBrand ? (
               <>
                 <Line
                   yAxisId="left"
