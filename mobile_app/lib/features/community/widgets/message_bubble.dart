@@ -26,11 +26,11 @@ class MessageBubble extends StatelessWidget {
       radius: 16,
       backgroundColor: const Color(0xFF443A5B),
       backgroundImage:
-          (msg.sender.avatarUrl != null && msg.sender.avatarUrl!.isNotEmpty)
-              ? NetworkImage(msg.sender.avatarUrl!)
+          (msg.sender?.avatarUrl != null && msg.sender!.avatarUrl!.isNotEmpty)
+              ? NetworkImage(msg.sender!.avatarUrl!)
               : null,
-      child: (msg.sender.avatarUrl == null ||
-              msg.sender.avatarUrl!.isEmpty)
+      child: (msg.sender?.avatarUrl == null ||
+              msg.sender!.avatarUrl!.isEmpty)
           ? const Icon(Icons.person, color: Colors.white70, size: 18)
           : null,
     );
@@ -60,7 +60,7 @@ class MessageBubble extends StatelessWidget {
                     padding:
                         const EdgeInsets.only(left: 4, right: 4, bottom: 2),
                     child: Text(
-                      msg.sender.name,
+                      msg.sender?.displayName ?? 'Unknown',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: text.labelSmall?.copyWith(

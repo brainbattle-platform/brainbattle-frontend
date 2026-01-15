@@ -1,4 +1,3 @@
-// lib/features/auth/login/login_controller.dart (rút gọn ý tưởng)
 import 'package:flutter/foundation.dart';
 import '../../../core/network/auth_api.dart';
 import '../../../core/services/token_storage.dart';
@@ -22,7 +21,6 @@ class LoginController {
       await _repo.login(email, password);
       return true;
     } catch (e) {
-      // Đừng để toString() ra “Exception: …”
       error.value = e is Exception ? e.toString().replaceFirst('Exception: ', '') : 'Login failed';
       return false;
     } finally {

@@ -33,7 +33,7 @@ class ThreadFilterBar extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         _FilterPill(
-          label: 'Groups',
+          label: 'Clans',
           selected: value == ThreadFilter.groups,
           accent: accent,
           onTap: () => onChanged(ThreadFilter.groups),

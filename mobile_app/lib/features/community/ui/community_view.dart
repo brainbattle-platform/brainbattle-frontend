@@ -59,9 +59,9 @@ class _CommunityViewState extends State<CommunityView> {
                   label: 'Chats',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.sports_esports_outlined),
-                  selectedIcon: Icon(Icons.sports_esports),
-                  label: 'Battle',
+                  icon: Icon(Icons.person_outline_rounded),
+                  selectedIcon: Icon(Icons.person_rounded),
+                  label: 'People',
                 ),
               ],
             ),
