@@ -1,6 +1,4 @@
 import 'package:flutter/foundation.dart';
-import '../../../core/network/auth_api.dart';
-import '../../../core/services/token_storage.dart';
 import 'login_repository.dart';
 
 class LoginController {
@@ -10,15 +8,19 @@ class LoginController {
 
   late final LoginRepository _repo;
 
-  LoginController() {
-    _repo = LoginRepository(AuthApi(), TokenStorage());
+  LoginController({LoginRepository? repo}) {
+    _repo = repo ?? LoginRepository();
   }
 
-  Future<bool> login(String email, String password) async {
+  /// Login with username and password
+  /// 
+  /// Returns true on success, false on error
+  /// Error message is available in error.value
+  Future<bool> login(String username, String password) async {
     try {
       loading.value = true;
       error.value = null;
-      await _repo.login(email, password);
+      await _repo.login(username, password);
       return true;
     } catch (e) {
       error.value = e is Exception ? e.toString().replaceFirst('Exception: ', '') : 'Login failed';

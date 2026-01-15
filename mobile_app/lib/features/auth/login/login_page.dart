@@ -17,7 +17,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _email = TextEditingController();
+  final _username = TextEditingController(); // Changed from _email to _username
   final _password = TextEditingController();
   late final LoginController _vm;
 
@@ -29,7 +29,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    _email.dispose();
+    _username.dispose();
     _password.dispose();
     _vm.dispose();
     super.dispose();
@@ -39,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
     HapticFeedback.selectionClick();
     if (!_formKey.currentState!.validate()) return;
 
-    final ok = await _vm.login(_email.text.trim(), _password.text);
+    final ok = await _vm.login(_username.text.trim(), _password.text);
     if (!mounted) return;
 
     final err = _vm.error.value;
@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => VerifyOtpPage(email: _email.text.trim()),
+          builder: (_) => VerifyOtpPage(email: _username.text.trim()),
         ),
       );
       return;
@@ -71,12 +71,11 @@ class _LoginPageState extends State<LoginPage> {
     ).showSnackBar(SnackBar(content: Text(err ?? 'Login failed')));
   }
 
-  String? _validateEmail(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Please enter your email';
-    final ok = RegExp(
-      r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
-    ).hasMatch(v.trim());
-    if (!ok) return 'Invalid email';
+  String? _validateUsername(String? v) {
+    if (v == null || v.trim().isEmpty) return 'Please enter your username';
+    // Username validation: 3-20 chars, alphanumeric, dots, underscores, hyphens
+    final ok = RegExp(r'^[a-zA-Z0-9._-]{3,20}$').hasMatch(v.trim());
+    if (!ok) return 'Username must be 3-20 characters (letters, numbers, ., _, -)';
     return null;
   }
 
@@ -172,10 +171,10 @@ class _LoginPageState extends State<LoginPage> {
                         child: Column(
                           children: [
                             _BBTextField(
-                              label: 'Email',
-                              controller: _email,
-                              keyboardType: TextInputType.emailAddress,
-                              validator: _validateEmail,
+                              label: 'Username',
+                              controller: _username,
+                              keyboardType: TextInputType.text,
+                              validator: _validateUsername,
                             ),
                             const SizedBox(height: 14),
                             ValueListenableBuilder<bool>(

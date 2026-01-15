@@ -6,6 +6,7 @@ import '../../../core/utils/json_num.dart';
 import '../data/unit_model.dart';
 import '../data/lesson_model.dart';
 import '../data/learning_api_client.dart';
+import '../data/learning_map_repository.dart';
 import '../core/unlock_service.dart';
 import 'widgets/learning_loading_skeleton.dart';
 import 'widgets/learning_empty_state.dart';
@@ -31,6 +32,7 @@ class GalaxyMapScreen extends StatefulWidget {
 
 class _GalaxyMapScreenState extends State<GalaxyMapScreen> {
   final _apiClient = LearningApiClient();
+  final _mapRepo = LearningMapRepository(); // New repository using DouApiClient
   final _unlockService = UnlockService.instance;
   final _scroll = ScrollController();
   List<Unit> _units = [];
@@ -50,8 +52,9 @@ class _GalaxyMapScreenState extends State<GalaxyMapScreen> {
     });
 
     try {
-      // Call GET /api/learning/map
-      final mapData = await _apiClient.getLearningMap();
+      // Call GET /api/learning/map using DouApiClient (automatically includes x-user-id)
+      final mapResponse = await _mapRepo.getMap();
+      final mapData = mapResponse['data'] ?? mapResponse;
       
       // Parse response: {unitId, unitTitle, skills: [{skillId, title, state, position, progressPercent}]}
       final unitId = mapData['unitId'] as String? ?? 'unit-1';

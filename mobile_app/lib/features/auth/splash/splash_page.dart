@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../starter/starter_page.dart';
+import '../data/services/user_session.dart';
+import '../../profile/ui/main_shell.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -21,17 +23,39 @@ class _SplashPageState extends State<SplashPage>
   static const _pinkBrain = Color(0xFFFF8FAB);
   static const _pinkBattle = Color(0xFFF3B4C3);
 
-  void _goNext() {
+  Future<void> _goNext() async {
     if (!mounted || _navigated) return;
     _navigated = true;
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const StarterPage(),
-        transitionDuration: const Duration(milliseconds: 300),
-        transitionsBuilder: (context, animation, secondary, child) =>
-            FadeTransition(opacity: animation, child: child),
-      ),
-    );
+    
+    // Check if user is already logged in
+    final isLoggedIn = await UserSession.instance.isLoggedIn();
+    final userId = await UserSession.instance.getUserId();
+    
+    if (isLoggedIn && userId != null) {
+      // User is logged in, go to MainShell
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const MainShell(initialIndex: 2),
+            transitionDuration: const Duration(milliseconds: 300),
+            transitionsBuilder: (context, animation, secondary, child) =>
+                FadeTransition(opacity: animation, child: child),
+          ),
+        );
+      }
+    } else {
+      // User not logged in, go to StarterPage
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const StarterPage(),
+            transitionDuration: const Duration(milliseconds: 300),
+            transitionsBuilder: (context, animation, secondary, child) =>
+                FadeTransition(opacity: animation, child: child),
+          ),
+        );
+      }
+    }
   }
 
   @override
