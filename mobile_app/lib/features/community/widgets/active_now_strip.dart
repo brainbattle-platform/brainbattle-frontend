@@ -1,12 +1,34 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
+import '../data/models.dart';
 import 'avatar_name.dart';
 
-class ActiveUser {
-  final String name;
+class ActiveUser implements UserLite {
+  @override
+  final String id;
+  @override
+  final String handle;
+  @override
+  final String displayName;
+  @override
   final String? avatarUrl;
+  @override
+  final bool? isActiveNow;
+  @override
+  final DateTime? lastActiveAt;
 
-  const ActiveUser({required this.name, this.avatarUrl});
+  const ActiveUser({
+    required this.id,
+    required this.handle,
+    required this.displayName,
+    this.avatarUrl,
+    this.isActiveNow,
+    this.lastActiveAt,
+  });
+
+  // Deprecated: kept for backward compatibility
+  @Deprecated('Use displayName instead')
+  String get name => displayName;
 }
 
 typedef ActiveUserTap = void Function(ActiveUser user);
@@ -40,7 +62,7 @@ class ActiveNowStrip extends StatelessWidget {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                AvatarName(name: u.name, avatarUrl: u.avatarUrl),
+                AvatarName(user: u),
                 Positioned(
                   right: 2,
                   bottom: 18,

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models.dart';
-import '../../data/demo_store.dart';
+import '../../data/community_di.dart';
 
 class NewClanPage extends StatefulWidget {
   const NewClanPage({super.key});
@@ -20,22 +20,12 @@ class _NewClanPageState extends State<NewClanPage> {
   final _description = TextEditingController();
   final _scroll = ScrollController();
 
-  // ===== Mock users (demo) =====
-  final List<UserLite> _allUsers = const [
-    UserLite(id: 'u1', name: 'Han', avatarUrl: 'https://i.pravatar.cc/150?img=3'),
-    UserLite(id: 'u2', name: 'Linh', avatarUrl: 'https://i.pravatar.cc/150?img=5'),
-    UserLite(id: 'u3', name: 'Vy', avatarUrl: 'https://i.pravatar.cc/150?img=6'),
-    UserLite(id: 'u4', name: 'Chi', avatarUrl: 'https://i.pravatar.cc/150?img=7'),
-    UserLite(id: 'u5', name: 'Thảo', avatarUrl: 'https://i.pravatar.cc/150?img=8'),
-    UserLite(id: 'u6', name: 'Hảo', avatarUrl: 'https://i.pravatar.cc/150?img=9'),
-    UserLite(id: 'u7', name: 'Vũ'),
-    UserLite(id: 'u8', name: 'Quân'),
-    UserLite(id: 'u9', name: 'Minh'),
-    UserLite(id: 'u10', name: 'Anh'),
-  ];
+  // TODO: Integrate with account-service GET /users/search
+  // For now, use empty list. Users will be added via API integration.
+  final List<UserLite> _allUsers = const [];
 
   final Set<String> _selectedIds = {};
-  File? _pickedImage; // mock avatar clan
+  File? _pickedImage;
 
   @override
   void dispose() {
@@ -266,31 +256,48 @@ class _NewClanPageState extends State<NewClanPage> {
     );
   }
 
-  // ===== CORE DEMO LOGIC =====
-  void _onCreateClan() {
+  // ===== CORE LOGIC =====
+  Future<void> _onCreateClan() async {
     final name = _clanName.text.trim();
+    final description = _description.text.trim();
 
-    final selectedMembers =
-        _allUsers.where((u) => _selectedIds.contains(u.id)).toList();
-
-    // Đảm bảo có "me"
-    final members = [
-      const UserLite(
-        id: 'me',
-        name: 'You',
-        avatarUrl: 'https://i.pravatar.cc/150?img=3',
-      ),
-      ...selectedMembers,
-    ];
-
-    // 👉 TẠO CLAN THẬT TRONG DEMO STORE
-    final threadId = DemoCommunityStore.I.createClan(
-      name: name,
-      members: members,
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
-    // 👉 Trả về threadId cho ChatsPage → ThreadPage
-    Navigator.pop(context, threadId);
+    try {
+      final repo = communityRepo();
+      final result = await repo.createClan(
+        name: name,
+        description: description.isNotEmpty ? description : null,
+        avatarUrl: null, // TODO: upload _pickedImage if needed
+        memberIds: _selectedIds.toList(),
+      );
+
+      if (!mounted) return;
+      
+      // Close loading dialog
+      Navigator.pop(context);
+      
+      // Return thread ID to navigate to chat
+      Navigator.pop(context, result.thread.id);
+    } catch (e) {
+      if (!mounted) return;
+      
+      // Close loading dialog
+      Navigator.pop(context);
+      
+      // Show error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creating clan: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
 

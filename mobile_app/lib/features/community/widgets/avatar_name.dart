@@ -1,27 +1,33 @@
 import 'package:flutter/material.dart';
+import '../data/models.dart';
 
 class AvatarName extends StatelessWidget {
-  final String name;
-  final String? avatarUrl;
+  final UserLite user;
   final double radius;
 
   const AvatarName({
     super.key,
-    required this.name,
-    this.avatarUrl,
+    required this.user,
     this.radius = 28,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Display name with fallback to handle
+    final displayName = user.displayName.isNotEmpty 
+        ? user.displayName 
+        : user.handle;
+
     return Column(
       children: [
         CircleAvatar(
           radius: radius,
           backgroundColor: const Color(0xFF443A5B),
           backgroundImage:
-              avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-          child: avatarUrl == null
+              user.avatarUrl != null && user.avatarUrl!.isNotEmpty
+                  ? NetworkImage(user.avatarUrl!)
+                  : null,
+          child: user.avatarUrl == null || user.avatarUrl!.isEmpty
               ? const Icon(Icons.person, color: Colors.white70)
               : null,
         ),
@@ -29,7 +35,7 @@ class AvatarName extends StatelessWidget {
         SizedBox(
           width: radius * 2.4,
           child: Text(
-            name,
+            displayName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
