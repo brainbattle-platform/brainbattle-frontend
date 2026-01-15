@@ -32,6 +32,39 @@ class CommunityApi {
     ));
   }
 
+  /// Upload attachment (image/file) for community messaging via
+  /// POST /community/attachments/upload (no JWT, x-user-id only).
+  /// Returns the AttachmentDto JSON from { data, meta }.
+  Future<Json> uploadCommunityAttachment(String filePath, {String? fileName}) async {
+    final uri = Uri.parse('$baseUrlMessaging/community/attachments/upload');
+
+    final request = http.MultipartRequest('POST', uri);
+    request.headers.addAll({
+      'x-user-id': currentUserId,
+    });
+
+    final file = await http.MultipartFile.fromPath(
+      'file',
+      filePath,
+      filename: fileName,
+    );
+    request.files.add(file);
+
+    final streamed = await request.send();
+    final res = await http.Response.fromStream(streamed);
+
+    if (res.statusCode >= 400) {
+      throw ApiException(res.statusCode, _extractError(res.body));
+    }
+
+    final decoded = jsonDecode(res.body);
+    if (decoded is Map<String, dynamic> && decoded['data'] is Map<String, dynamic>) {
+      return decoded['data'] as Map<String, dynamic>;
+    }
+
+    throw ApiException(res.statusCode, 'Invalid community attachment upload response');
+  }
+
   // Core service methods
   Future<http.Response> getCore(String path, {Map<String, String>? params}) async {
     final uri = Uri.parse('$baseUrlCore$path').replace(queryParameters: params);

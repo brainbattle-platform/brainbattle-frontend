@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
 import '../../../../core/theme/app_theme.dart';
 import '../../community_routes.dart';
 import '../../data/models.dart';
@@ -24,6 +27,7 @@ class _ThreadPageState extends State<ThreadPage> {
   final _input = TextEditingController();
   final _scroll = ScrollController();
   final _repo = communityRepo();
+  final _imagePicker = ImagePicker();
 
   String? _threadId;
   ThreadDetail? _threadDetail;
@@ -268,19 +272,18 @@ class _ThreadPageState extends State<ThreadPage> {
                         seenByText = thread.seenBySummary;
                       }
 
+                      final displayMsg = m.sender == null
+                          ? m.copyWith(
+                              sender: const UserLite(
+                                id: 'system',
+                                handle: 'system',
+                                displayName: 'System',
+                              ),
+                            )
+                          : m;
+
                       return MessageBubble(
-                        msg: Message(
-                          id: m.id,
-                          conversationId: m.conversationId,
-                          sender: m.sender ?? const UserLite(
-                            id: 'system',
-                            handle: 'system',
-                            displayName: 'System',
-                          ),
-                          text: m.text,
-                          createdAt: m.createdAt,
-                          status: m.status,
-                        ),
+                        msg: displayMsg,
                         fromMe: fromMe,
                         showAvatar: !fromMe,
                         showSenderName: isClan && !fromMe,
@@ -357,10 +360,298 @@ class _ThreadPageState extends State<ThreadPage> {
   }
 
   void _sendAttachment(String type) {
-    // TODO: Implement file picker and upload
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$type attachment not implemented yet')),
+    switch (type) {
+      case 'Image':
+        _pickAndSendImages();
+        break;
+      case 'Camera':
+        _captureAndSendImage();
+        break;
+      case 'File':
+        _pickAndSendFiles();
+        break;
+      case 'Link':
+        _promptAndSendLink();
+        break;
+      default:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$type attachment not supported')),
+        );
+    }
+  }
+
+  Future<void> _pickAndSendImages() async {
+    final threadId = _threadId;
+    if (threadId == null) return;
+
+    try {
+      final picked = await _imagePicker.pickMultiImage(
+        maxWidth: 2048,
+        imageQuality: 85,
+      );
+
+      if (picked.isEmpty) return;
+
+      var files = picked;
+      if (files.length > 10) {
+        files = files.take(10).toList();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You can send up to 10 images at once'),
+            ),
+          );
+        }
+      }
+
+      final attachments = <Map<String, dynamic>>[];
+      for (final x in files) {
+        if (x.path.isEmpty) continue;
+        final fileName = x.name.isNotEmpty ? x.name : p.basename(x.path);
+        final uploaded = await _repo.uploadAttachment(
+          filePath: x.path,
+          type: 'image',
+          fileName: fileName,
+        );
+        attachments.add(_toAttachmentInput(uploaded));
+      }
+
+      if (attachments.isEmpty) return;
+
+      final text = _input.text.trim();
+      _input.clear();
+
+      await _repo.sendMessage(
+        threadId,
+        text: text.isEmpty ? null : text,
+        attachments: attachments,
+      );
+      await _loadMessages();
+      if (_scroll.hasClients) {
+        _scroll.animateTo(
+          0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sending images: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _captureAndSendImage() async {
+    final threadId = _threadId;
+    if (threadId == null) return;
+
+    try {
+      final x = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 2048,
+        imageQuality: 85,
+      );
+      if (x == null || x.path.isEmpty) return;
+
+      final fileName = x.name.isNotEmpty ? x.name : p.basename(x.path);
+      final uploaded = await _repo.uploadAttachment(
+        filePath: x.path,
+        type: 'image',
+        fileName: fileName,
+      );
+      final attachments = <Map<String, dynamic>>[_toAttachmentInput(uploaded)];
+
+      final text = _input.text.trim();
+      _input.clear();
+
+      await _repo.sendMessage(
+        threadId,
+        text: text.isEmpty ? null : text,
+        attachments: attachments,
+      );
+      await _loadMessages();
+      if (_scroll.hasClients) {
+        _scroll.animateTo(
+          0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sending camera photo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickAndSendFiles() async {
+    final threadId = _threadId;
+    if (threadId == null) return;
+
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        allowMultiple: true,
+        withData: false,
+      );
+      if (result == null || result.files.isEmpty) return;
+
+      var files = result.files;
+      if (files.length > 10) {
+        files = files.take(10).toList();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('You can send up to 10 files at once'),
+            ),
+          );
+        }
+      }
+
+      final attachments = <Map<String, dynamic>>[];
+      for (final f in files) {
+        final path = f.path;
+        if (path == null || path.isEmpty) continue;
+        final fileName = f.name.isNotEmpty ? f.name : p.basename(path);
+        final uploaded = await _repo.uploadAttachment(
+          filePath: path,
+          type: 'file',
+          fileName: fileName,
+        );
+        attachments.add(_toAttachmentInput(uploaded));
+      }
+
+      if (attachments.isEmpty) return;
+
+      final text = _input.text.trim();
+      _input.clear();
+
+      await _repo.sendMessage(
+        threadId,
+        text: text.isEmpty ? null : text,
+        attachments: attachments,
+      );
+      await _loadMessages();
+      if (_scroll.hasClients) {
+        _scroll.animateTo(
+          0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sending files: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _promptAndSendLink() async {
+    final threadId = _threadId;
+    if (threadId == null) return;
+
+    final controller = TextEditingController();
+    final url = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2A243B),
+          title: const Text('Add link', style: TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: controller,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              hintText: 'https://example.com',
+              hintStyle: TextStyle(color: Colors.white54),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(controller.text.trim()),
+              child: const Text('Send'),
+            ),
+          ],
+        );
+      },
     );
+
+    if (url == null || url.isEmpty) return;
+
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.hasScheme || !uri.isAbsolute) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid URL')),
+        );
+      }
+      return;
+    }
+
+    try {
+      final attachments = <Map<String, dynamic>>[
+        {
+          'type': 'link',
+          'url': url,
+        },
+      ];
+
+      final text = _input.text.trim();
+      _input.clear();
+
+      await _repo.sendMessage(
+        threadId,
+        text: text.isEmpty ? null : text,
+        attachments: attachments,
+      );
+      await _loadMessages();
+      if (_scroll.hasClients) {
+        _scroll.animateTo(
+          0,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error sending link: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Map<String, dynamic> _toAttachmentInput(Attachment att) {
+    return <String, dynamic>{
+      'type': att.type,
+      'url': att.url,
+      if (att.thumbnailUrl != null) 'thumbnailUrl': att.thumbnailUrl,
+      if (att.fileName != null) 'fileName': att.fileName,
+      if (att.sizeBytes != null) 'sizeBytes': att.sizeBytes,
+      if (att.mimeType != null) 'mimeType': att.mimeType,
+      if (att.width != null) 'width': att.width,
+      if (att.height != null) 'height': att.height,
+    };
   }
 
   // ================= INFO SHEET =================

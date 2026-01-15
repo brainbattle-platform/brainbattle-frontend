@@ -27,6 +27,14 @@ abstract class ICommunityRepository {
     List<Map<String, dynamic>>? attachments,
   });
 
+  /// Upload a single attachment file and return the normalized
+  /// attachment JSON (compatible with Attachment.fromJson).
+  Future<Attachment> uploadAttachment({
+    required String filePath,
+    required String type, // image | file
+    String? fileName,
+  });
+
   Future<void> markRead(String threadId);
 
   Future<CursorPage<UserLite>> getActiveUsers({int limit = 20, String? cursor});
@@ -127,6 +135,30 @@ class CommunityRepositoryHttp implements ICommunityRepository {
     final json = jsonDecode(res.body);
     final data = json['data'] as Map<String, dynamic>;
     return Message.fromJson(data);
+  }
+
+  @override
+  Future<Attachment> uploadAttachment({
+    required String filePath,
+    required String type,
+    String? fileName,
+  }) async {
+    final json = await api.uploadCommunityAttachment(filePath, fileName: fileName);
+    final base = Attachment.fromJson(json);
+    if (base.type == type) return base;
+
+    // Normalize type to the requested one if backend returns a generic value.
+    return Attachment(
+      id: base.id,
+      type: type,
+      url: base.url,
+      thumbnailUrl: base.thumbnailUrl,
+      fileName: base.fileName,
+      sizeBytes: base.sizeBytes,
+      mimeType: base.mimeType,
+      width: base.width,
+      height: base.height,
+    );
   }
 
   @override

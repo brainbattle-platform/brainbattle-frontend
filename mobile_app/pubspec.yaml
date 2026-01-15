@@ -48,11 +48,13 @@ dependencies:
   permission_handler: ^11.3.1
   http: ^1.2.2
   image_picker: ^1.1.2
+  file_picker: ^8.0.0
   video_trimmer: ^2.0.0
   video_thumbnail: ^0.5.3
   uuid: ^4.5.1
   share_plus: ^10.1.2
   flutter_cache_manager: ^3.4.1
+  url_launcher: ^6.3.0
 dependency_overrides:
   ffmpeg_kit_flutter:
     path: packages/ffmpeg_kit_flutter-5.1.0-LTS
