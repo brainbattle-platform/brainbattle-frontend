@@ -198,3 +198,4 @@ final xpEarned = JsonNum.asIntOr(resultData['xpEarned'],
 
 **Error handling** enhanced: If parsing fails, user sees SnackBar with Retry button instead of silent crash.
 
+

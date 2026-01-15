@@ -87,6 +87,9 @@ flutter:
      - assets/animations/animation_global.json
      - assets/animations/animation_star.json
      - assets/animations/animation_point.json
+     - assets/badges/rank_bronze.png
+     - assets/badges/rank_silver.png
+     - assets/badges/rank_gold.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

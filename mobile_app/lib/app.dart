@@ -48,6 +48,12 @@ import 'features/shortvideo/ui/short_video_player_page.dart';
 
 import 'features/battle/ui/battle_flow.dart';
 import 'features/battle/battle_routes.dart';
+import 'features/profile/ui/app_shell.dart';
+import 'features/profile/ui/main_shell.dart';
+
+/// Debug flag to open MainShell directly (skip login flow)
+/// Set to false to use normal flow (SplashPage -> StarterPage -> Login)
+const bool kDebugOpenAppShell = false;
 
 class BrainBattleApp extends StatelessWidget {
   const BrainBattleApp({super.key});
@@ -60,7 +66,7 @@ class BrainBattleApp extends StatelessWidget {
       theme: bbLightTheme(),
       darkTheme: bbDarkTheme(),
       themeMode: ThemeMode.dark,
-      home: const SplashPage(),
+      home: kDebugOpenAppShell ? const MainShell() : const SplashPage(),
       routes: {
         StarterPage.routeName: (_) => const StarterPage(),
         // DEPRECATED: /community route - redirects to ShortVideoShell with community tab
@@ -126,6 +132,8 @@ class BrainBattleApp extends StatelessWidget {
         LearningRoutes.curriculumBrowser: (_) => const CurriculumBrowserPage(),
         LearningRoutes.placementTest: (_) => const PlacementTestPage(),
         BattleRoutes.root: (_) => const BattleFlow(),
+        MainShell.routeName: (_) => const MainShell(),
+        AppShell.routeName: (_) => const AppShell(), // Deprecated but kept for compatibility
         LoginPage.routeName: (_) => const LoginPage(),
         SignUpPage.routeName: (_) => const SignUpPage(),
         VerifyOtpPage.routeName: (ctx) {

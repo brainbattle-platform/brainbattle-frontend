@@ -5,6 +5,7 @@ import 'login_controller.dart';
 import '../verify/verify_otp_page.dart';
 import 'package:lottie/lottie.dart';
 import '../forgot/forgot_start_page.dart';
+import '../../profile/ui/main_shell.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -47,7 +48,11 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Logged in!')));
-      Navigator.pop(context); // hoặc pushReplacementNamed('/home')
+      // Navigate to MainShell (main app after login) - opens at Feed tab (index 2)
+      Navigator.of(context).pushReplacementNamed(
+        MainShell.routeName,
+        arguments: {'initialIndex': 2},
+      );
       return;
     }
 

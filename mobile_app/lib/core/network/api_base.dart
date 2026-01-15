@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 
-const String _lanPc = 'http://10.0.11.123'; // PC IP without port
+//const String _lanPc = 'http://10.0.11.123'; // PC IP without port
+const String _lanPc = 'http://10.0.16.6'; // PC IP without port
 const String _localhost = 'http://localhost'; // Localhost base
 const String _emu = 'http://10.0.2.2';       // Android Emulator AVD
 

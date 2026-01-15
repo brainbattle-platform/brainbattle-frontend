@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/login/login_page.dart';
-import '../../shortvideo/shortvideo.dart';
 import '../../auth/signup/sign_up_page.dart';
+import '../../profile/ui/main_shell.dart';
 import 'package:lottie/lottie.dart';
 
 
@@ -262,8 +262,11 @@ class _Popup extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             _ExploreGradientButton(
-              onPressed: () =>
-                  Navigator.pushNamed(context, ShortVideoShell.routeName),
+              onPressed: () => Navigator.pushNamed(
+                context,
+                MainShell.routeName,
+                arguments: {'initialIndex': 2},
+              ),
             ),
             const SizedBox(height: 8),
           ],
